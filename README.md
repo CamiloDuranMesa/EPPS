@@ -1574,7 +1574,7 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 ```
 MIT License
 
-Copyright (c) 2026 [Tu Organización]
+Copyright (c) 2026 Camilo Durán Mesa
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
