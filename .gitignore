@@ -1,0 +1,111 @@
+# ============================================================================
+# .gitignore - Sistema de Gestión de EPP
+# ============================================================================
+# Archivos y carpetas que NO deben subirse a GitHub por seguridad/privacidad
+# ============================================================================
+
+# ====================================
+# ARCHIVOS DE CONFIGURACIÓN SENSIBLES
+# ====================================
+config/database.php
+.env
+.env.local
+.env.production
+
+# ====================================
+# ARCHIVOS GENERADOS POR USUARIOS
+# ====================================
+# Firmas digitales (contienen datos personales)
+firmas/
+firmas/**/*.png
+firmas/**/*.jpg
+
+# PDFs adjuntos (pueden contener información confidencial)
+uploads/
+uploads/**/*.pdf
+
+# Archivos temporales
+temp/
+temp/**/*
+
+# ====================================
+# DEPENDENCIAS
+# ====================================
+vendor/
+node_modules/
+
+# ====================================
+# LOGS Y CACHÉS
+# ====================================
+*.log
+logs/
+*.cache
+
+# ====================================
+# ARCHIVOS DEL SISTEMA OPERATIVO
+# ====================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ====================================
+# IDEs Y EDITORES
+# ====================================
+# Visual Studio Code
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# PHPStorm / IntelliJ
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ====================================
+# ARCHIVOS DE RESPALDO
+# ====================================
+*.bak
+*.backup
+*.old
+*.swp
+*.swo
+*~
+
+# ====================================
+# COMPOSER
+# ====================================
+composer.lock
+composer.phar
+
+# ====================================
+# BASES DE DATOS
+# ====================================
+*.sql.gz
+*.sql.bak
+backup.sql
+dump.sql
+
+# ====================================
+# MANTENER CARPETAS VACÍAS
+# ====================================
+# Si necesitas mantener las carpetas pero sin contenido,
+# crea archivos .gitkeep dentro de ellas

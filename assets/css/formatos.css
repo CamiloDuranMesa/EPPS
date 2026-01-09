@@ -1,0 +1,720 @@
+/* ===== Variables de marca ===== */
+:root {
+    --brand-blue: #0a3d62;
+    --brand-green: #16a085;
+    --bg: #f5f7fb;
+    --card-bg: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --radius: 12px;
+    --shadow: 0 10px 30px rgba(10, 61, 98, 0.08);
+    --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== Reset mínimo / base ===== */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg);
+}
+
+/* ===== Contenedor de elementos ===== */
+.contenedor-elementos {
+    background: white;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius);
+    padding: 0 !important;
+}
+
+.elemento-item {
+    border-bottom: 1px solid var(--border) !important;
+    padding: 12px 16px !important;
+    transition: background-color 0.2s ease;
+}
+
+.elemento-item:hover {
+    background-color: #f9fafb;
+}
+
+.elemento-item:last-child {
+    border-bottom: none !important;
+}
+
+/* Checkbox mejorado */
+.form-check {
+    padding: 0;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    cursor: pointer;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.form-check-input:hover {
+    border-color: var(--brand-green);
+    box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+}
+
+.form-check-input:checked {
+    background-color: var(--brand-green);
+    border-color: var(--brand-green);
+}
+
+.form-check-label {
+    margin-bottom: 0;
+    cursor: pointer;
+    margin-left: 8px;
+    user-select: none;
+    font-size: 0.95rem;
+}
+
+/* Input de cantidad */
+.input-group-sm .form-control,
+.input-group-sm .input-group-text {
+    font-size: 0.875rem;
+    padding: 4px 8px;
+}
+
+.cantidad-elemento {
+    width: 60px !important;
+    text-align: center;
+}
+
+.cantidad-elemento:disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* iPad specific improvements */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .elemento-item {
+        padding: 10px 12px !important;
+    }
+
+    .form-check-label {
+        font-size: 0.9rem;
+    }
+
+    .input-group-sm {
+        display: flex;
+    }
+
+    .cantidad-elemento {
+        width: 50px !important;
+    }
+}
+
+/* Mobile improvements */
+@media (max-width: 767px) {
+    .contenedor-elementos {
+        max-height: 300px !important;
+    }
+
+    .elemento-item {
+        padding: 10px 8px !important;
+        row-gap: 8px;
+    }
+
+    .form-check-label {
+        font-size: 0.875rem;
+    }
+
+    .input-group {
+        margin-top: 8px;
+    }
+
+    .cantidad-elemento {
+        width: 45px !important;
+    }
+}
+
+
+.titulo-formulario {
+    text-align: center;
+    margin-bottom: 32px;
+    color: var(--brand-blue);
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: -0.5px;
+}
+
+.titulo-formulario::after {
+    content: "";
+    display: block;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--brand-blue), var(--brand-green));
+    border-radius: 999px;
+    margin: 12px auto 0;
+}
+
+/* ===== Alertas ===== */
+.alert {
+    border-radius: var(--radius);
+    border: none;
+    padding: 15px 20px;
+    font-weight: 500;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+/* ===== Formulario - Grid responsivo ===== */
+.row {
+    --bs-gutter-x: 1rem;
+    --bs-gutter-y: 0;
+}
+
+.col-12 {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .col-md-3 {
+        width: 25%;
+        flex: 0 0 25%;
+    }
+    .col-md-4 {
+        width: 33.333%;
+        flex: 0 0 33.333%;
+    }
+    .col-md-6 {
+        width: 50%;
+        flex: 0 0 50%;
+    }
+    .col-md-9 {
+        width: 75%;
+        flex: 0 0 75%;
+    }
+}
+
+/* ===== Form Labels y Inputs ===== */
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.form-label small {
+    display: block;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.form-control,
+.form-select {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background-color: #fff;
+    color: var(--text);
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--brand-blue);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(10, 61, 98, 0.1);
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: var(--muted);
+}
+
+/* Select múltiple */
+.form-select[multiple] {
+    min-height: 200px;
+    padding: 8px;
+}
+
+.form-select[multiple] option {
+    padding: 6px;
+}
+
+/* Textarea */
+textarea.form-control {
+    resize: vertical;
+    font-family: inherit;
+    min-height: 100px;
+}
+
+/* ===== Dropdown de búsqueda ===== */
+.dropdown-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 0 0 var(--radius) var(--radius);
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: var(--shadow-light);
+    z-index: 1000;
+    display: none;
+}
+
+.dropdown-list.active {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg);
+    color: var(--brand-blue);
+}
+
+/* ===== Sección de firmas ===== */
+.firma-box {
+    border: 1px solid var(--border);
+    padding: 20px;
+    border-radius: var(--radius);
+    background-color: var(--bg);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.firma-box:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-light);
+}
+
+.firma-box canvas {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    display: block;
+    width: 100%;
+    height: 180px;
+    background-color: #fff;
+    cursor: crosshair;
+    touch-action: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s ease;
+}
+
+.firma-box canvas:hover {
+    border-color: var(--brand-green);
+}
+
+/* ===== Botones ===== */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(22, 160, 133, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(22, 160, 133, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background-color: var(--muted);
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 1rem;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.btn-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* ===== Utilidades ===== */
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.pt-2 {
+    padding-top: 0.5rem;
+}
+
+.form-text {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.text-muted {
+    color: var(--muted);
+}
+
+.d-block {
+    display: block;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.d-grid {
+    display: grid;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-3 {
+    gap: 1rem;
+}
+
+.gap-md-0 {
+    gap: 0;
+}
+
+@media (min-width: 768px) {
+    .d-md-flex {
+        display: flex;
+    }
+    .gap-md-0 {
+        gap: 0;
+    }
+}
+
+.justify-content-md-between {
+    justify-content: space-between;
+}
+
+.align-self-end {
+    align-self: flex-end;
+}
+
+/* ===== Mensaje de elemento ===== */
+.mensaje-elemento {
+    display: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    animation: slideIn 0.3s ease forwards;
+}
+
+.mensaje-elemento.alert {
+    display: block;
+}
+
+.mensaje-elemento.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 3px solid #ffc107;
+}
+
+.mensaje-elemento.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 3px solid #28a745;
+}
+
+.mensaje-elemento.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 3px solid #dc3545;
+}
+
+.mensaje-elemento.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 3px solid #17a2b8;
+}
+
+/* ===== Animaciones ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== RESPONSIVE - Tablets ===== */
+@media (max-width: 768px) {
+    .formulario-entrega {
+        padding: 16px;
+    }
+
+    .titulo-formulario {
+        font-size: 1.5rem;
+        margin-bottom: 24px;
+    }
+
+    .row {
+        --bs-gutter-x: 0.75rem;
+    }
+
+    .col-12 {
+        width: 100%;
+        flex: 0 0 100%;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 0.9rem;
+        padding: 10px 12px;
+    }
+
+    .btn {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+    }
+
+    .btn-lg {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+
+    .firma-box canvas {
+        height: 150px;
+    }
+
+    .d-grid {
+        gap: 0.75rem;
+    }
+
+    .d-md-flex {
+        display: flex;
+    }
+}
+
+/* ===== RESPONSIVE - Móviles ===== */
+@media (max-width: 576px) {
+    body {
+        padding: 0;
+    }
+
+    .formulario-entrega {
+        padding: 12px;
+        margin: 0;
+        border-radius: 8px;
+    }
+
+    .titulo-formulario {
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+    }
+
+    .titulo-formulario::after {
+        width: 60px;
+    }
+
+    .row {
+        --bs-gutter-x: 0.5rem;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+    }
+
+    .form-select[multiple] {
+        min-height: 150px;
+        font-size: 0.85rem;
+    }
+
+    textarea.form-control {
+        min-height: 80px;
+    }
+
+    .btn {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+
+    .btn-lg {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .firma-box {
+        padding: 12px;
+    }
+
+    .firma-box canvas {
+        height: 120px;
+    }
+
+    .d-grid,
+    .d-md-flex {
+        flex-direction: column;
+    }
+
+    .gap-2,
+    .gap-3 {
+        gap: 0.5rem;
+    }
+
+    .alert {
+        padding: 12px 15px;
+        font-size: 0.85rem;
+    }
+
+    .form-text {
+        font-size: 0.75rem;
+    }
+}
+
+/* ===== iPad específico (9ª generación - 1024x768) ===== */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .formulario-entrega {
+        padding: 20px;
+    }
+
+    .row {
+        --bs-gutter-x: 1rem;
+    }
+
+    .col-md-4 {
+        width: 33.333%;
+        flex: 0 0 33.333%;
+    }
+
+    .col-md-6 {
+        width: 50%;
+        flex: 0 0 50%;
+    }
+
+    .firma-box canvas {
+        height: 160px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    .row {
+        --bs-gutter-x: 0.75rem;
+    }
+
+    .col-md-4 {
+        width: 100%;
+        flex: 0 0 100%;
+    }
+
+    .col-md-6 {
+        width: 100%;
+        flex: 0 0 100%;
+    }
+
+    .firma-box canvas {
+        height: 140px;
+    }
+}
+

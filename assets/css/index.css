@@ -1,0 +1,123 @@
+.home-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 60px);
+    padding: 20px;
+}
+
+.welcome-card {
+    background: #fff;
+    padding: 40px;
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    max-width: 750px;
+    width:100%;
+    animation: slideUp 0.6s ease-out;
+}
+
+.welcome-card h1 {
+    font-size: 28px;
+    color: #007bff;
+    margin-bottom: 15px;
+} 
+
+.subtitle {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.description {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.features span {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #333;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.features span:hover {
+    transform: translateY(-3px);
+    background: #e9f7ef;
+}
+
+.cta {
+    font-weight: bold;
+    color: #333;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    opacity: 0;
+    animation: fadeIn 0.8s forwards;
+}
+
+.fade-in-delay {
+    opacity: 0;
+    animation: fadeIn 1s ease forwards 0.3s;
+}
+
+.fade-in-delay2 {
+    opacity: 0;
+    animation: fadeIn 1s ease forwards 0.6s;
+}
+
+.fade-in-delay3 {
+    opacity: 0;
+    animation: fadeIn 1s ease forwards 0.9s;
+}
+
+.fade-in-delay4 {
+    opacity: 0;
+    animation: fadeIn 1s ease forwards 1.2s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.intro {
+    margin: 25px auto;
+    max-width: 600px;
+}
+
+.intro-icon {
+    width: 120px;
+    height: auto;
+    margin-bottom: 15px;
+    opacity: 0.9;
+    transition: transform 0.3s ease;
+}
+
+.intro-icon:hover {
+    transform: scale(1.05);
+}
+
+.intro-text {
+    font-size: 16px;
+    color: #444;
+    line-height: 1.6;
+}

@@ -1,0 +1,111 @@
+
+body {
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: #f8fafc;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  font-weight: 600;
+  color: #0a3d62; 
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.container-fluid {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.card-header {
+  background: #0a3d62;
+  color: #fff;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  padding: 12px 20px;
+}
+
+.card-header h5 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.card-body {
+  font-size: 15px;
+  line-height: 1.6;
+  background: #fff;
+  border-radius: 0 0 10px 10px;
+  padding: 20px;
+}
+
+.form-select {
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  border-color: #0a3d62;
+  box-shadow: 0 0 0 0.2rem rgba(10, 61, 98, 0.25);
+  outline: none;
+}
+
+.form-select option {
+  padding: 10px;
+}
+
+.grafica-container {
+  position: relative;
+  margin: auto;
+  height: 60vh;
+  width: 100%;
+  padding: 15px;
+}
+
+/* Estilos para el canvas de la gráfica */
+canvas#grafica {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilos para los botones */
+.btn-primary {
+  background: #1e8449;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #145a32;
+  transform: scale(1.05);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: scale(1.05);
+}

@@ -1,0 +1,211 @@
+/* ===== Variables de marca ===== */
+:root{
+  --brand-blue: #0a3d62;   /* Azul corporativo */
+  --brand-green:#16a085;   /* Verde corporativo */
+  --bg: #f5f7fb;
+  --card-bg: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --radius: 14px;
+  --shadow: 0 10px 30px rgba(10, 61, 98, 0.08);
+}
+
+/* ===== Reset mínimo / base ===== */
+*{ box-sizing:border-box }
+html, body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color:var(--text);
+  background: linear-gradient(180deg, #f9fbff 0%, var(--bg) 100%);
+}
+
+.container-fluid{
+  padding-top: 14vh;
+  padding-bottom: 40px;
+}
+
+.col-10{
+  margin-inline: auto;
+}
+
+/* ===== Títulos ===== */
+h2{
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: var(--brand-blue);
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  margin: 0 0 24px 0;
+  position: relative;
+}
+
+h2::after{
+  content:"";
+  width: 56px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand-blue), var(--brand-green));
+  position:absolute;
+  left:0;
+  bottom:-8px;
+  opacity:.9;
+}
+
+/* Subtítulos de sección (ej. subir excel) */
+h4{
+  font-weight: 600;
+  color: var(--brand-green);
+  margin: 28px 0 16px 0;
+  font-size: 1.1rem;
+  position: relative;
+}
+
+h4::after{
+  content:"";
+  display:block;
+  width: 42px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--brand-green);
+  margin-top: 6px;
+  opacity:.85;
+}
+
+/* ===== “Card” del formulario ===== */
+.col-10.p-4{
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ===== Etiquetas / labels ===== */
+label{
+  font-size: .92rem;
+  color: var(--muted);
+  margin-bottom: .35rem;
+  display: inline-block;
+}
+
+/* ===== Inputs (usa .form-control de Bootstrap) ===== */
+.form-control{
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .7rem .9rem;
+  background: #fff;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .05s ease;
+}
+
+.form-control:focus{
+  border-color: color-mix(in srgb, var(--brand-blue) 60%, #fff 40%);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-blue) 15%, transparent 85%);
+  outline: none;
+}
+
+.form-control:hover{
+  transform: translateY(-1px);
+}
+
+/* Quita flechas en inputs numéricos si usas type="number" */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number]{ -moz-appearance: textfield; }
+
+/* ===== Botón primario ===== */
+.btn.btn-primary{
+  --btn-bg: linear-gradient(135deg, var(--brand-blue), var(--brand-green));
+  --btn-bg-hover: linear-gradient(135deg, color-mix(in srgb, var(--brand-blue) 90%, #fff 10%), color-mix(in srgb, var(--brand-green) 90%, #fff 10%));
+  background: var(--btn-bg);
+  border: none;
+  border-radius: 12px;
+  padding: .8rem 1.2rem;
+  font-weight: 600;
+  letter-spacing: .2px;
+  box-shadow: 0 8px 18px rgba(22,160,133,.18);
+  transition: transform .08s ease, box-shadow .2s ease, filter .2s ease, background .2s ease;
+}
+
+.btn.btn-primary:hover{
+  background: var(--btn-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(22,160,133,.22);
+  filter: saturate(1.05);
+}
+
+.btn.btn-primary:active{
+  transform: translateY(0);
+  box-shadow: 0 6px 12px rgba(22,160,133,.18);
+}
+
+/* ===== Botón secundario (ej. subir excel) ===== */
+.btn.btn-success{
+  background: var(--brand-green);
+  border: none;
+  border-radius: 12px;
+  padding: .75rem 1.2rem;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(22,160,133,.2);
+  transition: all .2s ease;
+}
+
+.btn.btn-success:hover{
+  background: color-mix(in srgb, var(--brand-green) 90%, #fff 10%);
+  box-shadow: 0 8px 20px rgba(22,160,133,.25);
+  transform: translateY(-1px);
+}
+
+/* ===== Grillas / separación ===== */
+.row{
+  row-gap: 8px;
+}
+
+.mb-3{ margin-bottom: 16px !important; }
+.mt-2{ margin-top: 12px !important; }
+
+/* ===== Alertas ===== */
+.alert{
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: .9rem 1rem;
+  font-weight: 500;
+  letter-spacing: .15px;
+}
+
+.alert-success{
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.alert-danger{
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #7f1d1d;
+}
+
+/* ===== Responsive pequeño ===== */
+@media (max-width: 768px){
+  .col-10.p-4{
+    border-radius: 12px;
+    padding: 18px !important;
+  }
+  h2{ font-size: 1.3rem; }
+}
+
+/* ===== Micro-interacciones ===== */
+form{
+  animation: fadeIn .35s ease both;
+}
+@keyframes fadeIn{
+  from{ opacity:0; transform: translateY(6px); }
+  to{ opacity:1; transform: translateY(0); }
+}
