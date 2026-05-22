@@ -7,7 +7,6 @@
 # ====================================
 # ARCHIVOS DE CONFIGURACIÓN SENSIBLES
 # ====================================
-config/database.php
 .env
 .env.local
 .env.production
