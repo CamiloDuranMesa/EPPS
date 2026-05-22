@@ -181,7 +181,6 @@ $stmtCab->bind_param("i", $entrega_id);
 $stmtCab->execute();
 $resCab = $stmtCab->get_result();
 $cab = $resCab->fetch_assoc();
-$cab['firma_sst'] = 'firma_sst/firma_sst.jpeg';
 $stmtCab->close();
 
 if (!$cab) {
@@ -352,53 +351,35 @@ include __DIR__ . '/../includes/header.php';
         <input type="hidden" name="entrega_id" value="<?= (int)$entrega_id ?>">
         <input type="hidden" name="accion" value="editar_items">
 
-        <label>Elementos entregados</label>
-        <p class="form-text small">Seleccione elementos y especifique cantidad para cada uno.</p>
-        <input type="text" id="filtroElementoEdit" class="form-control mb-2" placeholder="Buscar un elemento...">
+        <label>Ítems de plantilla</label>
+        <p class="form-text small">Seleccione ítems y especifique cantidad para cada uno.</p>
+        <input type="text" id="filtroElementoEdit" class="form-control mb-2" placeholder="Buscar un ítem...">
         <div id="contenedorElementosEdit" class="border rounded p-3" style="max-height: 400px; overflow-y: auto; background-color: #f8f9fa;">
             <!-- Los elementos se cargarán aquí -->
         </div>
             <?php
-            // Elementos estándares
             $opciones_backup = [
-                "Casco", "Careta tipo visor", "Gafas lente claro", "Barbuquejo",
-                "Tapa oido inserción", "Tapa oido diadema", "Chaqueta impermeable",
-                "Pantalon impermeable", "Peto", "Monogafas", "Tapabocas",
-                "Suelas antideslizantes", "Botas de caucho sin puntera",
-                "Botas de caucho con puntera", "Botas industrial", "Guantes de hilo",
-                "Guantes de acero", "Guantes de nitrilo verde", "Guantes de carnaza",
-                "Guantes extralargos de nitrilo", "Guantes industriales",
-                "Camisa antifluido blanca", "Camisa antifluido cafe",
-                "Pantalón antifluido blanco", "Pantalón antifluido cafe",
-                "Buso de lana térmico blanco", "Pantalón de lana blanco",
-                "Gorro completo de malla", "Gorro completo de antifluido",
-                "Gorro completo de antifluido cafe", "Arnes", "Careta para guadañar",
-                "Canguro", "Delantal de carnaza para guadañar",
-                "Eslinga de posicionamiento en y", "Guante negro de cacucho extralargo",
-                "Guante verde extralargo", "Pava", "Antebrazo acrilico",
-                "Retenedor guante de acero", "Guante extralargo de nitrilo",
-                "Mascara media cara", "Bota industrial para soldar con puntera",
-                "Camisa para soldar", "Chaqueta en jean para soldar",
-                "Botas industriales con puntera", "Careta para soldadura",
-                "Careta media cara", "Cinturon herramientero", "Mangas para soldar",
-                "Eslinga", "Peto para soldar", "Guantes en kleva para soldar",
-                "Gafas", "Polainas", "Guantes de malla acerado", "Traje impermeable"
+                'Elemento plantilla A',
+                'Elemento plantilla B',
+                'Elemento plantilla C',
+                'Elemento plantilla D',
+                'Elemento plantilla E'
             ];
-            
-            // Elementos de BD
-            $queryAllItems = "SELECT nombre_elemento FROM elementos_permitidos ORDER BY nombre_elemento ASC";
-            $resAllItems = $conn->query($queryAllItems);
-            
+
             $elementos_bd = [];
-            if ($resAllItems) {
-                while ($row = $resAllItems->fetch_assoc()) {
-                    $elementos_bd[] = $row['nombre_elemento'];
+            $resAllItems = $conn->query("SHOW TABLES LIKE 'elementos_permitidos'");
+            if ($resAllItems && $resAllItems->num_rows > 0) {
+                $resAllItems = $conn->query("SELECT nombre_elemento FROM elementos_permitidos ORDER BY nombre_elemento ASC");
+                if ($resAllItems) {
+                    while ($row = $resAllItems->fetch_assoc()) {
+                        $elementos_bd[] = $row['nombre_elemento'];
+                    }
                 }
             }
-            
-            $opciones = array_unique(array_merge($elementos_bd, $opciones_backup));
+
+            $opciones = array_values(array_unique(array_merge($elementos_bd, $opciones_backup)));
             sort($opciones);
-            
+
             // Crear mapa de elementos guardados con sus cantidades
             $elementosGuardadosMap = [];
             foreach ($detRows ?? [] as $dd) {
@@ -479,7 +460,6 @@ include __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="row my-4">
-<div class="row my-4">
         <?php
         $firmas = [
             ['key' => 'firma_empleado', 'label' => 'Firma Empleado', 'tipo' => 'empleado', 'formId' => 'formEmpleado'],
@@ -487,11 +467,25 @@ include __DIR__ . '/../includes/header.php';
             ['key' => 'firma_sst', 'label' => 'Firma SST', 'tipo' => 'sst', 'formId' => 'formSST']
         ];
 
+        $renderFirmaSrc = function ($valor) {
+            if (empty($valor)) {
+                return null;
+            }
+
+            $ruta = __DIR__ . '/../firmas/' . ltrim($valor, '/');
+            if (!file_exists($ruta)) {
+                return null;
+            }
+
+            return '../firmas/' . htmlspecialchars($valor);
+        };
+
         foreach ($firmas as $f): ?>
             <div class="col-md-4 text-center">
                 <p><strong><?= $f['label'] ?></strong></p>
-                <?php if (!empty($cab[$f['key']])): ?>
-                    <img src="../firmas/<?= htmlspecialchars($cab[$f['key']]) ?>"
+                <?php $srcFirma = $renderFirmaSrc($cab[$f['key']] ?? ''); ?>
+                <?php if ($srcFirma): ?>
+                    <img src="<?= $srcFirma ?>"
                         alt="<?= htmlspecialchars($f['label']) ?>"
                         style="max-width:200px;height:auto;border:1px solid #ccc;border-radius:8px;padding:4px;">
                 <?php else: ?>

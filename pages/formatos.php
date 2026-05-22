@@ -119,45 +119,56 @@ function guardarPDF($file) {
     }
 }
 
+function existeTabla($conn, $tabla) {
+    try {
+        $stmt = $conn->prepare("SHOW TABLES LIKE ?");
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->bind_param('s', $tabla);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $existe = $resultado && $resultado->num_rows > 0;
+        $stmt->close();
+        return $existe;
+    } catch (Throwable $e) {
+        error_log('Error validando tabla ' . $tabla . ': ' . $e->getMessage());
+        return false;
+    }
+}
+
 /**
- * Obtiene los elementos permitidos (estándares + personalizados del usuario)
- * @return array Lista de elementos permitidos
+ * Obtiene los elementos permitidos de una plantilla genérica.
+ * Si la tabla de personalizados no existe, se usan solo los elementos base.
  */
 function obtenerElementosPermitidos($conn, $usuario_id) {
     $elementosEstandar = [
-        "Casco", "Careta tipo visor", "Gafas lente claro", "Barbuquejo",
-        "Tapa oido inserción", "Tapa oido diadema", "Chaqueta impermeable",
-        "Pantalon impermeable", "Peto", "Monogafas", "Tapabocas",
-        "Suelas antideslizantes", "Botas de caucho sin puntera",
-        "Botas de caucho con puntera", "Botas industrial", "Guantes de hilo",
-        "Guantes de acero", "Guantes de nitrilo verde", "Guantes de carnaza",
-        "Guantes extralargos de nitrilo", "Guantes industriales",
-        "Camisa antifluido blanca", "Camisa antifluido cafe",
-        "Pantalón antifluido blanco", "Pantalón antifluido cafe",
-        "Buso de lana térmico blanco", "Pantalón de lana blanco",
-        "Gorro completo de malla", "Gorro completo de antifluido",
-        "Gorro completo de antifluido cafe", "Arnes", "Careta para guadañar",
-        "Canguro", "Delantal de carnaza para guadañar",
-        "Eslinga de posicionamiento en y", "Guante negro de cacucho extralargo",
-        "Guante verde extralargo", "Pava", "Antebrazo acrilico",
-        "Retenedor guante de acero", "Guante extralargo de nitrilo",
-        "Mascara media cara", "Bota industrial para soldar con puntera",
-        "Camisa para soldar", "Chaqueta en jean para soldar",
-        "Botas industriales con puntera", "Careta para soldadura",
-        "Careta media cara", "Cinturon herramientero", "Mangas para soldar",
-        "Eslinga", "Peto para soldar", "Guantes en kleva para soldar",
-        "Gafas", "Polainas", "Guantes de malla acerado", "Traje impermeable"
+        'Elemento plantilla A',
+        'Elemento plantilla B',
+        'Elemento plantilla C',
+        'Elemento plantilla D',
+        'Elemento plantilla E'
     ];
 
+    if (!existeTabla($conn, 'elementos_permitidos')) {
+        return $elementosEstandar;
+    }
+
     $elementosPersonalizados = [];
-    $stmt = $conn->prepare("SELECT nombre_elemento FROM elementos_permitidos ORDER BY nombre_elemento ASC");
-    if ($stmt) {
+    try {
+        $stmt = $conn->prepare("SELECT nombre_elemento FROM elementos_permitidos ORDER BY nombre_elemento ASC");
+        if (!$stmt) {
+            return $elementosEstandar;
+        }
         $stmt->execute();
         $resultado = $stmt->get_result();
         while ($row = $resultado->fetch_assoc()) {
             $elementosPersonalizados[] = $row['nombre_elemento'];
         }
         $stmt->close();
+    } catch (Throwable $e) {
+        error_log('Error consultando elementos_permitidos: ' . $e->getMessage());
+        return $elementosEstandar;
     }
 
     return array_values(array_unique(array_merge($elementosEstandar, $elementosPersonalizados)));
@@ -174,6 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $elementos = array_filter($_POST['elementos'] ?? []);
     $observaciones = trim($_POST['observaciones'] ?? '');
     $sst_id = filter_var($_POST['sst_id'] ?? null, FILTER_VALIDATE_INT);
+    $sst_id = ($sst_id === false) ? 0 : (int)$sst_id;
 
     // Validaciones básicas
     if (!$empleado_id) {
@@ -181,9 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($fecha_entrega)) {
         $errorMessage = "La fecha de entrega es obligatoria.";
     } elseif (empty($elementos) && empty($observaciones) && empty($_FILES['archivo_pdf']['name'])) {
-        $errorMessage = "Debe seleccionar al menos un elemento entregado, observaciones o subir un PDF.";
-    } elseif (!$sst_id) {
-        $errorMessage = "Debe seleccionar un representante SST.";
+        $errorMessage = "Debe seleccionar al menos un ítem de plantilla, observaciones o subir un PDF.";
     } else {
         // Validar firmas
         $firma_empleado = $_POST['firma_empleado'] ?? '';
@@ -203,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $conn->begin_transaction();
 
                 try {
-                    $archivo_firma_sst = "firma_sst/firma_sst.jpeg";
+                    $archivo_firma_sst = '';
                     $pdf_filename = null;
 
                     // Insertar entrega
@@ -408,15 +418,15 @@ include __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Elementos Entregados -->
+        <!-- Ítems de plantilla -->
         <div class="mb-4">
-            <label class="form-label">Elementos entregados *</label>
-            <p class="form-text small">Seleccione uno o más elementos, O complete observaciones. Ambos son opcionales pero mínimo uno es requerido.</p>
+            <label class="form-label">Ítems de plantilla *</label>
+            <p class="form-text small">Seleccione uno o más ítems de plantilla o complete observaciones. Al menos una de estas opciones es obligatoria.</p>
 
             <div class="row g-2 mb-3">
                 <div class="col-12 col-md-6 col-lg-8">
                     <input type="text" id="buscarElemento" class="form-control" 
-                           placeholder="Buscar elemento para filtrar lista..." autocomplete="off">
+                           placeholder="Buscar ítem para filtrar la lista..." autocomplete="off">
                     <div id="mensajeElemento" class="mensaje-elemento mt-2"></div>
                 </div>
                 <div class="col-12 col-md-6 col-lg-4">
@@ -430,7 +440,7 @@ include __DIR__ . '/../includes/header.php';
                 <!-- Los elementos se cargarán aquí dinámicamente -->
             </div>
             <small class="form-text text-muted d-block mt-2">
-                ✓ Seleccione los elementos entregados y especifique la cantidad de cada uno.
+                ✓ Seleccione los ítems de plantilla y especifique la cantidad de cada uno.
             </small>
 
             <!-- Campo hidden para pasar datos al servidor -->
@@ -498,17 +508,14 @@ include __DIR__ . '/../includes/header.php';
 
             <!-- Firma SST -->
             <div class="col-12 col-md-4">
-                <label class="form-label fw-bold">Representante SST *</label>
-                <select name="sst_id" id="sstSelect" class="form-select mb-3" required>
-                    <option value="">-- Seleccionar --</option>
-                    <option value="776" <?= (!isset($_POST['sst_id']) || intval($_POST['sst_id']) === 776) ? 'selected' : '' ?>>Elizabeth Ortega</option>
+                <label class="form-label fw-bold">Representante SST</label>
+                <select name="sst_id" id="sstSelect" class="form-select mb-3">
+                    <option value="0" <?= (!isset($_POST['sst_id']) || intval($_POST['sst_id']) === 0) ? 'selected' : '' ?>>Representante genérico</option>
                 </select>
                 <label class="form-label small">Firma SST</label>
-                <div class="text-center">
-                    <img src="/firmas/firma_sst/firma_sst.jpeg" alt="Firma SST" 
-                         class="img-fluid border rounded" style="max-height: 180px;">
+                <div class="text-center text-muted border rounded p-3">
+                    Sin firma configurada en esta plantilla.
                 </div>
-                <input type="hidden" name="firma_sst" value="firma_sst.jpeg">
             </div>
         </div>
 

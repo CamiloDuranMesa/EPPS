@@ -8,10 +8,31 @@ if (!isset($_SESSION['usuario_id'])) {
     exit;
 }
 
+function existeTablaElementos($conn) {
+    try {
+        $stmt = $conn->prepare("SHOW TABLES LIKE 'elementos_permitidos'");
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $existe = $resultado && $resultado->num_rows > 0;
+        $stmt->close();
+        return $existe;
+    } catch (Throwable $e) {
+        error_log('Error validando elementos_permitidos: ' . $e->getMessage());
+        return false;
+    }
+}
+
 $usuario_id = $_SESSION['usuario_id'];
 $accion = $_POST['accion'] ?? '';
 
 if ($accion === 'guardar') {
+    if (!existeTablaElementos($conn)) {
+        echo json_encode(['error' => 'La tabla de elementos permitidos no está configurada en esta plantilla.']);
+        exit;
+    }
     $nombre = trim($_POST['nombre'] ?? '');
     if ($nombre === '') {
         echo json_encode(['error' => 'Nombre vacío']);
@@ -38,6 +59,11 @@ if ($accion === 'guardar') {
 }
 
 if ($accion === 'obtener') {
+    if (!existeTablaElementos($conn)) {
+        echo json_encode(['elementos' => []]);
+        exit;
+    }
+
     $stmt = $conn->prepare("SELECT nombre_elemento FROM elementos_permitidos WHERE usuario_id = ?");
     $stmt->bind_param("i", $usuario_id);
     $stmt->execute();
