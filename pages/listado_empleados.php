@@ -22,14 +22,16 @@ if (!isset($_SESSION['usuario_id'])) {
 
 
 
+
+// Inicializar filtros de forma segura
 $por_pagina = 10;
 $pagina_actual = isset($_GET['pagina']) ? max(1, (int)$_GET['pagina']) : 1;
-$filtroTexto = isset($_GET['buscador']) ? trim($_GET['buscador']) : '';
-$filtroCargo = isset($_GET['filtroCargo']) ? trim($_GET['filtroCargo']) : '';
-$filtroArea = isset($_GET['filtroArea']) ? trim($_GET['filtroArea']) : '';
-$filtroFecha = isset($_GET['filtroFecha']) ? trim($_GET['filtroFecha']) : '';
-$filtroMes = isset($_GET['filtroMes']) ? (int)$_GET['filtroMes'] : 0;
-$filtroAnio = isset($_GET['filtroAnio']) ? (int)$_GET['filtroAnio'] : 0;
+$filtroTexto = isset($_GET['buscador']) ? trim($_GET['buscador']) : (isset($_SESSION['filtroTexto']) ? trim($_SESSION['filtroTexto']) : '');
+$filtroCargo = isset($_GET['filtroCargo']) ? trim($_GET['filtroCargo']) : (isset($_SESSION['filtroCargo']) ? trim($_SESSION['filtroCargo']) : '');
+$filtroArea = isset($_GET['filtroArea']) ? trim($_GET['filtroArea']) : (isset($_SESSION['filtroArea']) ? trim($_SESSION['filtroArea']) : '');
+$filtroFecha = isset($_GET['filtroFecha']) ? trim($_GET['filtroFecha']) : (isset($_SESSION['filtroFecha']) ? trim($_SESSION['filtroFecha']) : '');
+$filtroMes = isset($_GET['filtroMes']) ? (int)$_GET['filtroMes'] : (isset($_SESSION['filtroMes']) ? (int)$_SESSION['filtroMes'] : 0);
+$filtroAnio = isset($_GET['filtroAnio']) ? (int)$_GET['filtroAnio'] : (isset($_SESSION['filtroAnio']) ? (int)$_SESSION['filtroAnio'] : 0);
 
 
 
@@ -101,18 +103,23 @@ $whereSQL
 ORDER BY empleados.nombre ASC
 LIMIT ? OFFSET ?";
 
+
 $stmt = $conn->prepare($sql);
-if ($params) {
-    $types2 = $types . 'ii';
-    $bindParams = $params;
-    $bindParams[] = $por_pagina;
-    $bindParams[] = $offset;
-    $stmt->bind_param($types2, ...$bindParams);
+if ($stmt) {
+    if ($params) {
+        $types2 = $types . 'ii';
+        $bindParams = $params;
+        $bindParams[] = $por_pagina;
+        $bindParams[] = $offset;
+        $stmt->bind_param($types2, ...$bindParams);
+    } else {
+        $stmt->bind_param('ii', $por_pagina, $offset);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
 } else {
-    $stmt->bind_param('ii', $por_pagina, $offset);
+    $result = false;
 }
-$stmt->execute();
-$result = $stmt->get_result();
 
 // Consultar entregas incompletas (sin entregas_detalle O sin pdf_file)
 $sqlIncompletas = "
@@ -158,7 +165,7 @@ include __DIR__ . '/../includes/header.php';
             <input type="hidden" name="page" value="historial">
             <input type="hidden" name="pagina" value="1" id="paginaInput">
             <div class="col-md-4 mb-2">
-                <input type="text" name="buscador" id="buscador" class="form-control" placeholder="Buscar por nombre o cédula..." value="<?= htmlspecialchars($filtroTexto) ?>">
+                <input type="text" name="buscador" id="buscador" class="form-control" placeholder="Buscar por nombre o cédula..." value="<?= htmlspecialchars($filtroTexto ?? '') ?>">
             </div>
             <div class="col-md-4 mb-2">
                 <select name="filtroCargo" id="filtroCargo" class="form-control">
@@ -167,7 +174,7 @@ include __DIR__ . '/../includes/header.php';
                     $cargos = $conn->query("SELECT DISTINCT cargo FROM empleados WHERE cargo IS NOT NULL AND cargo <> ''");
                     while ($c = $cargos->fetch_assoc()) {
                         $selected = ($filtroCargo === $c['cargo']) ? 'selected' : '';
-                        echo "<option value='" . htmlspecialchars($c['cargo']) . "' $selected>" . htmlspecialchars($c['cargo']) . "</option>";
+                        echo "<option value='" . htmlspecialchars($c['cargo'] ?? '') . "' $selected>" . htmlspecialchars($c['cargo'] ?? '') . "</option>";
                     }
                     ?>
                 </select>
@@ -179,13 +186,13 @@ include __DIR__ . '/../includes/header.php';
                     $areas = $conn->query("SELECT DISTINCT area FROM empleados WHERE area IS NOT NULL AND area <> ''");
                     while ($a = $areas->fetch_assoc()) {
                         $selected = ($filtroArea === $a['area']) ? 'selected' : '';
-                        echo "<option value='" . htmlspecialchars($a['area']) . "' $selected>" . htmlspecialchars($a['area']) . "</option>";
+                        echo "<option value='" . htmlspecialchars($a['area'] ?? '') . "' $selected>" . htmlspecialchars($a['area'] ?? '') . "</option>";
                     }
                     ?>
                 </select>
             </div>
             <div class="col-md-4 mb-2">
-                <input type="date" name="filtroFecha" id="filtroFecha" class="form-control" value="<?= htmlspecialchars($filtroFecha)?>">
+                <input type="date" name="filtroFecha" id="filtroFecha" class="form-control" value="<?= htmlspecialchars($filtroFecha ?? '')?>">
             </div>
             <div class="col-md-2 mb-2">
                 <select name="filtroMes" id="filtroMes" class="form-control">
@@ -203,7 +210,6 @@ include __DIR__ . '/../includes/header.php';
                     ?>
                 </select>
             </div>
-            
             <div class="col-md-2 mb-2">
                 <select name="filtroAnio" id="filtroAnio" class="form-control">
                     <option value="0">Filtrar por año</option>
@@ -216,7 +222,6 @@ include __DIR__ . '/../includes/header.php';
                     ?>
                 </select>
             </div>
-
         </form>
     </div>
 
@@ -231,26 +236,30 @@ include __DIR__ . '/../includes/header.php';
             </tr>
         </thead>
         <tbody>
-        <?php while ($row = $result->fetch_assoc()): 
-            // Verificar si este empleado tiene entregas incompletas
-            $tieneIncompletas = array_filter($entregasIncompletas, function($inc) use ($row) {
-                return $inc['empleado_id'] == $row['id'];
-            });
-            $badgeClass = !empty($tieneIncompletas) ? 'badge bg-warning text-dark' : '';
-            $badgeText = !empty($tieneIncompletas) ? '⚠️' : '';
-        ?>
-            <tr <?= !empty($tieneIncompletas) ? 'style="background-color: #fff3cd;"' : '' ?>>
-                <td><?= htmlspecialchars($row['nombre']) ?> <span class="<?= $badgeClass ?>"><?= $badgeText ?></span></td>
-                <td><?= htmlspecialchars($row['cedula']) ?></td>
-                <td><?= htmlspecialchars($row['cargo']) ?></td>
-                <td><?= htmlspecialchars($row['area']) ?></td>
-                <td>
-                    <a href="pages/historial.php?empleado_id=<?= urlencode($row['id']) ?>&buscador=<?= urlencode($filtroTexto) ?>&filtroCargo=<?= urlencode($filtroCargo) ?>&filtroArea=<?= urlencode($filtroArea) ?>&filtroFecha=<?= urlencode($filtroFecha) ?>&filtroMes=<?= urlencode($filtroMes) ?>&filtroAnio=<?= urlencode($filtroAnio) ?>" class="btn-ver-historial">
-                        Ver historial
-                    </a>
-                </td>
-            </tr>
-        <?php endwhile; ?>
+        <?php if ($result && $result instanceof mysqli_result): ?>
+            <?php while ($row = $result->fetch_assoc()): 
+                // Verificar si este empleado tiene entregas incompletas
+                $tieneIncompletas = array_filter($entregasIncompletas, function($inc) use ($row) {
+                    return $inc['empleado_id'] == $row['id'];
+                });
+                $badgeClass = !empty($tieneIncompletas) ? 'badge bg-warning text-dark' : '';
+                $badgeText = !empty($tieneIncompletas) ? '⚠️' : '';
+            ?>
+                <tr <?= !empty($tieneIncompletas) ? 'style="background-color: #fff3cd;"' : '' ?> >
+                    <td><?= htmlspecialchars($row['nombre'] ?? '') ?> <span class="<?= $badgeClass ?>"><?= $badgeText ?></span></td>
+                    <td><?= htmlspecialchars($row['cedula'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($row['cargo'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($row['area'] ?? '') ?></td>
+                    <td>
+                        <a href="pages/historial.php?empleado_id=<?= urlencode($row['id']) ?>&buscador=<?= urlencode($filtroTexto ?? '') ?>&filtroCargo=<?= urlencode($filtroCargo ?? '') ?>&filtroArea=<?= urlencode($filtroArea ?? '') ?>&filtroFecha=<?= urlencode($filtroFecha ?? '') ?>&filtroMes=<?= urlencode($filtroMes ?? 0) ?>&filtroAnio=<?= urlencode($filtroAnio ?? 0) ?>" class="btn-ver-historial">
+                            Ver historial
+                        </a>
+                    </td>
+                </tr>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <tr><td colspan="5" class="text-danger">Error al consultar empleados. Por favor intente más tarde.</td></tr>
+        <?php endif; ?>
         </tbody>
     </table>
 
