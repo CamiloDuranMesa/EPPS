@@ -327,7 +327,7 @@ public_html/
 │   └── firma_*.png
 │
 ├── 📁 img/                # Imágenes
-│   └── agro-logo.png
+│   └── logo_test.png
 │
 ├── 📁 includes/           # Componentes reutilizables
 │   ├── elementos_handler.php    # AJAX handler para elementos
@@ -850,7 +850,7 @@ const myChart = new Chart(ctx, {
 use Dompdf\Dompdf;
 
 // Convertir logo a base64
-$logoFile = __DIR__ . '/../assets/img/agro-logo.png';
+$logoFile = __DIR__ . '/../img/logo_test.png';
 $logoData = base64_encode(file_get_contents($logoFile));
 $logoSrc = 'data:image/png;base64,' . $logoData;
 

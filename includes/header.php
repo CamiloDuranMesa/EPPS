@@ -27,10 +27,10 @@
     <?php
     $basePath = str_replace('\\', '/', dirname($_SERVER['PHP_SELF']));
     if (strpos($basePath, '/pages') !== false) {
-        $imgPath = "../img/agro-logo.png";
+        $imgPath = "../img/logo_test.png";
     } else {
-        $imgPath = "img/agro-logo.png";
+        $imgPath = "img/logo_test.png";
     }
     ?>
-    <img src="<?php echo $imgPath; ?>" alt="Logo Empresa">
+    <img src="<?php echo $imgPath; ?>" alt="Logo Test">
 </div>

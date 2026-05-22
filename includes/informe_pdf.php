@@ -48,8 +48,10 @@ $stmt->close();
 $tempDir = __DIR__ . '/../temp';
 if (!is_dir($tempDir)) mkdir($tempDir, 0777, true);
 
-
-$logoFile = __DIR__ . '/../assets/img/agro-logo.png';
+$logoFile = __DIR__ . '/../img/logo_test.png';
+if (!file_exists($logoFile)) {
+    $logoFile = __DIR__ . '/../img/epp_icon.png';
+}
 $logoData = base64_encode(file_get_contents($logoFile));
 $logoSrc = 'data:image/png;base64,' . $logoData;
 
@@ -68,7 +70,7 @@ table th { background-color: #f0f0f0; }
 
 <div class="header">
     <img src="' . $logoSrc . '" class="logo">
-    <h2>Informe de entregas - Agro S.A.</h2>
+    <h2>Informe de entregas - Sistema EPP</h2>
 </div>
 
 <div class="employee-info">
@@ -138,7 +140,7 @@ $html .= '</tbody></table>
 </table>
 
 <div class="footer">
-Agro S.A. &copy; ' . date('Y') . '. Todos los derechos reservados.
+Sistema EPP &copy; ' . date('Y') . '. Todos los derechos reservados.
 </div>';
 
 

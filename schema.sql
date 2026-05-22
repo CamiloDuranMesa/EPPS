@@ -7,12 +7,8 @@
 --              gestión de Elementos de Protección Personal
 -- ============================================================================
 
--- Crear base de datos (comentar si ya existe)
-CREATE DATABASE IF NOT EXISTS prueba_epp 
-CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
-
-USE prueba_epp;
+-- Conéctese primero a la base de datos de Aiven que desea usar.
+-- No use esta línea para seleccionar la base; hágalo desde su cliente SQL.
 
 -- ============================================================================
 -- TABLA: usuarios
@@ -55,8 +51,6 @@ CREATE TABLE IF NOT EXISTS entregas (
     pdf_file VARCHAR(255) COMMENT 'Nombre del archivo PDF adjunto',
     usuario_id INT NOT NULL COMMENT 'ID del usuario que registró la entrega',
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de registro en el sistema',
-    
-    -- Claves foráneas
     FOREIGN KEY (empleado_id) REFERENCES empleados(id) ON DELETE CASCADE,
     FOREIGN KEY (responsable_entrega) REFERENCES usuarios(id) ON DELETE SET NULL,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
@@ -71,8 +65,6 @@ CREATE TABLE IF NOT EXISTS entregas_detalle (
     entrega_id INT NOT NULL COMMENT 'ID de la entrega (cabecera)',
     elemento VARCHAR(100) NOT NULL COMMENT 'Nombre del elemento EPP entregado',
     observacion TEXT COMMENT 'Observaciones sobre el elemento entregado',
-    
-    -- Clave foránea
     FOREIGN KEY (entrega_id) REFERENCES entregas(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -85,8 +77,19 @@ CREATE TABLE IF NOT EXISTS elementos_personalizados (
     usuario_id INT NOT NULL COMMENT 'ID del usuario que creó el elemento',
     nombre_elemento VARCHAR(100) NOT NULL COMMENT 'Nombre del elemento personalizado',
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del elemento',
-    
-    -- Clave foránea
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- TABLA: elementos_permitidos
+-- Descripción: Catálogo de elementos permitidos para las entregas
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS elementos_permitidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL COMMENT 'ID del usuario propietario del elemento',
+    nombre_elemento VARCHAR(100) NOT NULL COMMENT 'Nombre del elemento permitido',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del elemento',
+    UNIQUE KEY uq_elemento_usuario (usuario_id, nombre_elemento),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -94,26 +97,46 @@ CREATE TABLE IF NOT EXISTS elementos_personalizados (
 -- ÍNDICES PARA MEJORAR RENDIMIENTO
 -- ============================================================================
 
--- Índice en cédula de empleados (búsquedas frecuentes)
-CREATE INDEX idx_empleado_cedula ON empleados(cedula);
+-- Nota: cedula ya es UNIQUE, por lo que MySQL ya crea el índice necesario.
+-- Nota: idx_entrega_empleado e idx_detalle_entrega son usados por claves foráneas,
+--       por lo que no se eliminan ni se recrean.
 
--- Índice en nombre de empleados (búsquedas por nombre)
-CREATE INDEX idx_empleado_nombre ON empleados(nombre);
+DROP PROCEDURE IF EXISTS sp_create_index_if_missing;
+DELIMITER $$
 
--- Índice en fecha de entrega (filtros por fecha)
-CREATE INDEX idx_entrega_fecha ON entregas(fecha_entrega);
+CREATE PROCEDURE sp_create_index_if_missing(
+    IN p_table_name VARCHAR(64),
+    IN p_index_name VARCHAR(64),
+    IN p_index_definition VARCHAR(255)
+)
+BEGIN
+    SET @v_table_name = p_table_name;
+    SET @v_index_name = p_index_name;
+    SET @v_index_definition = p_index_definition;
 
--- Índice en empleado_id de entregas (consultas por empleado)
-CREATE INDEX idx_entrega_empleado ON entregas(empleado_id);
+    SET @v_sql = IF(
+        EXISTS (
+            SELECT 1
+            FROM information_schema.statistics
+            WHERE table_schema = DATABASE()
+              AND table_name = @v_table_name
+              AND index_name = @v_index_name
+        ),
+        'SELECT 1',
+        CONCAT('CREATE INDEX ', @v_index_name, ' ON ', @v_table_name, ' ', @v_index_definition)
+    );
 
--- Índice en entrega_id de detalle (JOIN frecuente)
-CREATE INDEX idx_detalle_entrega ON entregas_detalle(entrega_id);
+    PREPARE stmt FROM @v_sql;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+END$$
 
--- Índice en área de empleados (filtros por área)
-CREATE INDEX idx_empleado_area ON empleados(area);
+DELIMITER ;
 
--- Índice en cargo de empleados (filtros por cargo)
-CREATE INDEX idx_empleado_cargo ON empleados(cargo);
+CALL sp_create_index_if_missing('empleados', 'idx_empleado_nombre', '(nombre)');
+CALL sp_create_index_if_missing('entregas', 'idx_entrega_fecha', '(fecha_entrega)');
+CALL sp_create_index_if_missing('empleados', 'idx_empleado_area', '(area)');
+CALL sp_create_index_if_missing('empleados', 'idx_empleado_cargo', '(cargo)');
 
 -- ============================================================================
 -- DATOS INICIALES
@@ -125,7 +148,10 @@ CREATE INDEX idx_empleado_cargo ON empleados(cargo);
 -- IMPORTANTE: Cambiar la contraseña inmediatamente después de la instalación
 INSERT INTO usuarios (nombre, usuario, password, rol) 
 VALUES ('Administrador', 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin')
-ON DUPLICATE KEY UPDATE id=id;
+ON DUPLICATE KEY UPDATE
+    nombre = VALUES(nombre),
+    password = VALUES(password),
+    rol = VALUES(rol);
 
 -- ============================================================================
 -- VISTAS ÚTILES (OPCIONAL)
@@ -175,6 +201,9 @@ ORDER BY total_entregas DESC;
 -- PROCEDIMIENTOS ALMACENADOS (OPCIONAL)
 -- ============================================================================
 
+DROP PROCEDURE IF EXISTS sp_historial_empleado;
+DROP PROCEDURE IF EXISTS sp_estadisticas_generales;
+
 DELIMITER $$
 
 -- Procedimiento para obtener historial completo de un empleado
@@ -215,6 +244,8 @@ DELIMITER ;
 -- TRIGGERS (OPCIONAL)
 -- ============================================================================
 
+DROP TRIGGER IF EXISTS trg_validar_fecha_entrega;
+
 DELIMITER $$
 
 -- Trigger para validar que la fecha de entrega no sea futura
@@ -234,13 +265,13 @@ DELIMITER ;
 -- VERIFICACIÓN DE INSTALACIÓN
 -- ============================================================================
 
--- Mostrar resumen de tablas creadas
+-- Mostrar resumen de tablas creadas en la base activa
 SELECT 
     TABLE_NAME AS 'Tabla',
     TABLE_ROWS AS 'Filas',
     ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 2) AS 'Tamaño (MB)'
 FROM information_schema.TABLES
-WHERE TABLE_SCHEMA = 'prueba_epp'
+WHERE TABLE_SCHEMA = DATABASE()
 ORDER BY TABLE_NAME;
 
 -- ============================================================================
