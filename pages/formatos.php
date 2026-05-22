@@ -1,11 +1,4 @@
-<link rel="stylesheet" href="/../assets/css/formatos.css">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <?php
-// ============================================================
-// INICIALIZACIÓN Y VALIDACIONES
-// ============================================================
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -13,13 +6,21 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../config/database.php';
 
 if (!isset($_SESSION['usuario_id'])) {
-    header("Location: ../login.php");
+    header("Location: ../views/login.php");
     exit();
 }
 
 $usuario_id = $_SESSION['usuario_id'];
 $errorMessage = '';
 $successMessage = '';
+?>
+<link rel="stylesheet" href="../assets/css/formatos.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<?php
+// ============================================================
+// INICIALIZACIÓN Y VALIDACIONES
+// ============================================================
 
 // ============================================================
 // FUNCIONES AUXILIARES

@@ -1,5 +1,3 @@
-<link rel="stylesheet" href="/../assets/css/historial.css">
-
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -19,6 +17,8 @@ if (!isset($_SESSION['usuario_id'])) {
     header("Location: ../views/login.php");
     exit();
 }
+?>
+<link rel="stylesheet" href="../assets/css/historial.css">
 
 
 

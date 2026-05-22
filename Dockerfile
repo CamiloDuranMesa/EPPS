@@ -1,16 +1,27 @@
 FROM php:8.2-apache
 
-# 1. Instalar la extensión mysqli obligatoria para conectar con MySQL
-RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
+# 1. Instalar herramientas base y extensiones PHP necesarias
+RUN apt-get update && apt-get install -y curl git unzip libzip-dev \
+    && docker-php-ext-install mysqli zip \
+    && docker-php-ext-enable mysqli zip \
+    && rm -rf /var/lib/apt/lists/*
 
-# 2. Habilitar el módulo de reescritura de Apache (útil para redirecciones)
+# 2. Instalar Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# 3. Habilitar el módulo de reescritura de Apache (útil para redirecciones)
 RUN a2enmod rewrite
 
-# 3. Asegurar que Apache tenga los permisos correctos sobre la carpeta web
-RUN chown -R www-data:www-data /var/www/html
+# 4. Configurar el directorio de trabajo y preparar dependencias
+WORKDIR /var/www/html
+COPY composer.json ./
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# 4. Copiar todo el código de tu proyecto a la carpeta de Apache
+# 5. Copiar el resto del proyecto
 COPY . /var/www/html/
 
-# 5. Exponer el puerto estándar
+# 6. Asegurar que Apache tenga los permisos correctos sobre la carpeta web
+RUN chown -R www-data:www-data /var/www/html
+
+# 7. Exponer el puerto estándar
 EXPOSE 80

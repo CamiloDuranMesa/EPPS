@@ -16,7 +16,7 @@ $filtrosUrl = http_build_query([
 require_once __DIR__ . "/../config/database.php";
 
 if (!isset($_SESSION['usuario_id'])) {
-    header("Location: login.php");
+    header("Location: ../views/login.php");
     exit();
 }
 
