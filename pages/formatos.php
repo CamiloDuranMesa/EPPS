@@ -137,6 +137,24 @@ function existeTabla($conn, $tabla) {
     }
 }
 
+function columnaExiste($conn, $tabla, $columna) {
+    try {
+        $stmt = $conn->prepare("SHOW COLUMNS FROM `{$tabla}` LIKE ?");
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->bind_param('s', $columna);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $existe = $resultado && $resultado->num_rows > 0;
+        $stmt->close();
+        return $existe;
+    } catch (Throwable $e) {
+        error_log('Error validando columna ' . $tabla . '.' . $columna . ': ' . $e->getMessage());
+        return false;
+    }
+}
+
 /**
  * Obtiene los elementos permitidos de una plantilla genérica.
  * Si la tabla de personalizados no existe, se usan solo los elementos base.
@@ -198,47 +216,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Validar firmas
         $firma_empleado = $_POST['firma_empleado'] ?? '';
         $firma_responsable = $_POST['firma_responsable'] ?? '';
+        $soporta_firma_responsable = columnaExiste($conn, 'entregas', 'firma_responsable');
+        $soporta_firma_sst = columnaExiste($conn, 'entregas', 'firma_sst');
 
-        if (empty($firma_empleado) || empty($firma_responsable)) {
-            $errorMessage = "Las firmas del empleado y responsable son obligatorias.";
+        if (empty($firma_empleado)) {
+            $errorMessage = "La firma del empleado es obligatoria.";
         } else {
             // Guardar firmas
             $archivo_firma_empleado = guardarFirma($firma_empleado);
-            $archivo_firma_responsable = guardarFirma($firma_responsable);
+            $archivo_firma_responsable = $soporta_firma_responsable && !empty($firma_responsable)
+                ? guardarFirma($firma_responsable)
+                : null;
 
-            if (!$archivo_firma_empleado || !$archivo_firma_responsable) {
-                $errorMessage = "Error al guardar las firmas. Por favor, intente de nuevo.";
+            if (!$archivo_firma_empleado) {
+                $errorMessage = "Error al guardar la firma del empleado. Por favor, intente de nuevo.";
             } else {
                 // Guardar entrega en base de datos
                 $conn->begin_transaction();
 
                 try {
-                    $archivo_firma_sst = '';
                     $pdf_filename = null;
+                    $numero_dotacion = trim((string)($_POST['numero_dotacion'] ?? ''));
 
-                    // Insertar entrega
-                    $stmt = $conn->prepare("
-                        INSERT INTO entregas 
-                        (empleado_id, fecha_entrega, numero_dotacion, responsable_entrega, sst_id, firma_empleado, firma_responsable, firma_sst, pdf_file) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)
-                    ");
+                    $campos = [
+                        'empleado_id',
+                        'fecha_entrega',
+                        'numero_dotacion',
+                        'responsable_entrega',
+                        'sst_id',
+                        'firma_empleado'
+                    ];
+                    $valores = ['?', '?', '?', '?', '?', '?'];
+                    $tipos = 'issiis';
+
+                    if ($soporta_firma_responsable) {
+                        $campos[] = 'firma_responsable';
+                        $valores[] = '?';
+                        $tipos .= 's';
+                    }
+
+                    if ($soporta_firma_sst) {
+                        $campos[] = 'firma_sst';
+                        $valores[] = '?';
+                        $tipos .= 's';
+                    }
+
+                    $campos[] = 'pdf_file';
+                    $valores[] = 'NULL';
+
+                    $stmt = $conn->prepare(
+                        "INSERT INTO entregas (" . implode(', ', $campos) . ") VALUES (" . implode(', ', $valores) . ")"
+                    );
 
                     if (!$stmt) {
                         throw new Exception("Error en preparación de consulta: " . $conn->error);
                     }
 
-                    $numero_dotacion = $_POST['numero_dotacion'] ?? null;
-                    $stmt->bind_param(
-                        "issiisss",
-                        $empleado_id,
-                        $fecha_entrega,
-                        $numero_dotacion,
-                        $usuario_id,
-                        $sst_id,
-                        $archivo_firma_empleado,
-                        $archivo_firma_responsable,
-                        $archivo_firma_sst
-                    );
+                    $parametros = [
+                        &$empleado_id,
+                        &$fecha_entrega,
+                        &$numero_dotacion,
+                        &$usuario_id,
+                        &$sst_id,
+                        &$archivo_firma_empleado
+                    ];
+
+                    if ($soporta_firma_responsable) {
+                        $parametros[] = &$archivo_firma_responsable;
+                    }
+
+                    if ($soporta_firma_sst) {
+                        $archivo_firma_sst = '';
+                        $parametros[] = &$archivo_firma_sst;
+                    }
+
+                    $stmt->bind_param($tipos, ...$parametros);
 
                     if (!$stmt->execute()) {
                         throw new Exception("Error al insertar entrega: " . $stmt->error);
