@@ -27,9 +27,9 @@
     <?php
     $basePath = str_replace('\\', '/', dirname($_SERVER['PHP_SELF']));
     if (strpos($basePath, '/pages') !== false) {
-        $imgPath = "../img/logo_test.png";
+        $imgPath = "../img/logo_test.png?v=1.5";
     } else {
-        $imgPath = "img/logo_test.png";
+        $imgPath = "img/logo_test.png?v=1.5";
     }
     ?>
     <img src="<?php echo $imgPath; ?>" alt="Logo Test">

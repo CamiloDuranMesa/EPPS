@@ -17,13 +17,10 @@ if (!isset($_SESSION['usuario_id'])) {
     header("Location: ../views/login.php");
     exit();
 }
-?>
-<link rel="stylesheet" href="../assets/css/historial.css">
 
-
-
-
-// Inicializar filtros de forma segura
+$pagina_url = 'index.php?page=historial';
+$result = false;
+$total_paginas = 1;
 $por_pagina = 10;
 $pagina_actual = isset($_GET['pagina']) ? max(1, (int)$_GET['pagina']) : 1;
 $filtroTexto = isset($_GET['buscador']) ? trim($_GET['buscador']) : (isset($_SESSION['filtroTexto']) ? trim($_SESSION['filtroTexto']) : '');
@@ -33,8 +30,9 @@ $filtroFecha = isset($_GET['filtroFecha']) ? trim($_GET['filtroFecha']) : (isset
 $filtroMes = isset($_GET['filtroMes']) ? (int)$_GET['filtroMes'] : (isset($_SESSION['filtroMes']) ? (int)$_SESSION['filtroMes'] : 0);
 $filtroAnio = isset($_GET['filtroAnio']) ? (int)$_GET['filtroAnio'] : (isset($_SESSION['filtroAnio']) ? (int)$_SESSION['filtroAnio'] : 0);
 
+?><link rel="stylesheet" href="../assets/css/historial.css">
 
-
+<?php
 $where = [];
 $params = [];
 $types = '';
@@ -86,13 +84,21 @@ FROM empleados
 LEFT JOIN entregas ON entregas.empleado_id = empleados.id
 $whereSQL";
 
+$total_filas = 0;
 $stmtCount = $conn->prepare($sqlCount);
-if ($params) $stmtCount->bind_param($types, ...$params);
-$stmtCount->execute();
-$resCount = $stmtCount->get_result();
-$total_filas = $resCount->fetch_assoc()['total'];
-$stmtCount->close();
-$total_paginas = ceil($total_filas / $por_pagina);
+if ($stmtCount) {
+    if ($params) {
+        $stmtCount->bind_param($types, ...$params);
+    }
+    $stmtCount->execute();
+    $resCount = $stmtCount->get_result();
+    if ($resCount) {
+        $countRow = $resCount->fetch_assoc();
+        $total_filas = (int)($countRow['total'] ?? 0);
+    }
+    $stmtCount->close();
+}
+$total_paginas = max(1, (int)ceil($total_filas / $por_pagina));
 
 $offset = ($pagina_actual - 1) * $por_pagina;
 
@@ -135,11 +141,11 @@ $sqlIncompletas = "
 
 $resultIncompletas = $conn->query($sqlIncompletas);
 $entregasIncompletas = [];
-while ($incomp = $resultIncompletas->fetch_assoc()) {
-    $entregasIncompletas[] = $incomp;
+if ($resultIncompletas) {
+    while ($incomp = $resultIncompletas->fetch_assoc()) {
+        $entregasIncompletas[] = $incomp;
+    }
 }
-
-$pagina_url = "index.php?page=historial";
 
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -267,16 +273,21 @@ include __DIR__ . '/../includes/header.php';
         <ul class="pagination justify-content-center">
             <?php
             $filtros_url = '';
-            if ($filtroTexto !== '') $filtros_url .= '&buscador=' . urlencode($filtroTexto);
-            if ($filtroCargo !== '') $filtros_url .= '&filtroCargo=' . urlencode($filtroCargo);
-            if ($filtroArea !== '') $filtros_url .= '&filtroArea=' . urlencode($filtroArea);
-            if ($filtroFecha !== '') $filtros_url .= '&filtroFecha=' . urlencode($filtroFecha);
-            if ($filtroMes > 0) $filtros_url .= '&filtroMes=' . urlencode($filtroMes);
-            if ($filtroAnio > 0) $filtros_url .= '&filtroAnio=' . urlencode($filtroAnio);
+            $filtroTextoSafe = $filtroTexto ?? '';
+            $filtroCargoSafe = $filtroCargo ?? '';
+            $filtroAreaSafe = $filtroArea ?? '';
+            $filtroFechaSafe = $filtroFecha ?? '';
+            $filtroMesSafe = (int)($filtroMes ?? 0);
+            $filtroAnioSafe = (int)($filtroAnio ?? 0);
 
+            if ($filtroTextoSafe !== '') $filtros_url .= '&buscador=' . urlencode($filtroTextoSafe);
+            if ($filtroCargoSafe !== '') $filtros_url .= '&filtroCargo=' . urlencode($filtroCargoSafe);
+            if ($filtroAreaSafe !== '') $filtros_url .= '&filtroArea=' . urlencode($filtroAreaSafe);
+            if ($filtroFechaSafe !== '') $filtros_url .= '&filtroFecha=' . urlencode($filtroFechaSafe);
+            if ($filtroMesSafe > 0) $filtros_url .= '&filtroMes=' . urlencode($filtroMesSafe);
+            if ($filtroAnioSafe > 0) $filtros_url .= '&filtroAnio=' . urlencode($filtroAnioSafe);
 
-            echo '<li class="page-item ' . (($pagina_actual <= 1) ? 'disabled' : '') . '"><a class="page-link" href="' . $pagina_url . '&pagina=' . ($pagina_actual - 1) . '&buscador=' . urlencode($filtroTexto) . '&filtroCargo=' . urlencode($filtroCargo) . '&filtroArea=' . urlencode($filtroArea) . '&filtroFecha=' . urlencode($filtroFecha) . '&filtroMes=' . urlencode($filtroMes) . '&filtroAnio=' . urlencode($filtroAnio) . '">Anterior</a></li>';
-
+            echo '<li class="page-item ' . (($pagina_actual <= 1) ? 'disabled' : '') . '"><a class="page-link" href="' . $pagina_url . '&pagina=' . ($pagina_actual - 1) . '&buscador=' . urlencode($filtroTextoSafe) . '&filtroCargo=' . urlencode($filtroCargoSafe) . '&filtroArea=' . urlencode($filtroAreaSafe) . '&filtroFecha=' . urlencode($filtroFechaSafe) . '&filtroMes=' . urlencode($filtroMesSafe) . '&filtroAnio=' . urlencode($filtroAnioSafe) . '">Anterior</a></li>';
 
             $rango = 2;
             $inicio = max(1, $pagina_actual - $rango);
