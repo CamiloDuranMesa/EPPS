@@ -1,83 +1,132 @@
 .sidebar {
-  background: linear-gradient(180deg, #0a3d62, #3c6382);
+  background: linear-gradient(180deg, #0a3d62 0%, #3c6382 100%);
   color: #fff;
   height: 100vh;
-  padding: 1.5rem;
-  font-family: "Segoe UI", Tahoma, sans-serif;
-  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+  padding: 1.7rem 1.2rem 1.2rem 1.2rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+  border-top-right-radius: 24px;
+  border-bottom-right-radius: 24px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-right: 1.5px solid rgba(255,255,255,0.10);
 }
 
 .sidebar h4 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 2.2rem;
   color: #f1f1f1;
   text-align: center;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.18);
+  padding-bottom: 0.7rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(60,99,130,0.10);
+}
+
+.sidebar .profile {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28px;
+  padding: 14px 10px;
+  border-radius: 14px;
+  background: rgba(8, 72, 146, 0.35);
+  box-shadow: 0 2px 8px rgba(31,38,135,0.10);
+  gap: 14px;
+  transition: background 0.2s;
+}
+.sidebar .profile:hover {
+  background: rgba(8, 72, 146, 0.55);
+}
+
+.sidebar .avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a6fa5 60%, #3c6382 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(60,99,130,0.10);
+  border: 2.5px solid #fff2;
+  transition: box-shadow 0.2s;
+}
+.sidebar .avatar:hover {
+  box-shadow: 0 4px 16px rgba(60,99,130,0.18);
+}
+
+.sidebar .profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar .profile-info .user-name {
+  font-weight: 600;
+  font-size: 1.08rem;
+  color: #fff;
+}
+.sidebar .profile-info .user-status {
+  font-size: 0.95rem;
+  color: #b2bec3;
 }
 
 .sidebar .nav {
   list-style: none;
   padding-left: 0;
+  margin-bottom: 0;
 }
-
 .sidebar .nav-item {
-  margin-bottom: 0.8rem;
+  margin-bottom: 1.1rem;
 }
-
 .sidebar .nav-link {
-  display: block;
-  padding: 0.7rem 1rem;
-  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 1.1rem;
+  border-radius: 14px;
   color: #f1f1f1;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.3s ease;
+  font-size: 1.08rem;
+  letter-spacing: 0.1px;
+  transition: all 0.25s cubic-bezier(.39,.575,.565,1);
+  box-shadow: 0 1px 4px rgba(60,99,130,0.04);
+  position: relative;
 }
-
 .sidebar .nav-link:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(5px);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffeaa7;
+  transform: translateX(7px) scale(1.03);
+  box-shadow: 0 2px 8px rgba(60,99,130,0.10);
 }
-
 .sidebar .nav-link.active {
-  background: rgba(255, 255, 255, 0.25);
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.28);
+  font-weight: 700;
+  color: #ffeaa7;
+  box-shadow: 0 2px 8px rgba(60,99,130,0.12);
 }
-
 .sidebar .nav-link.text-danger {
   color: #ff6b6b !important;
-  font-weight: 600;
+  font-weight: 700;
 }
-
 .sidebar .nav-link.text-danger:hover {
-  background: rgba(255, 107, 107, 0.15);
-  color: #ff8787 !important;
-  transform: translateX(5px);
+  background: rgba(255, 107, 107, 0.18);
+  color: #fff !important;
+  transform: translateX(7px) scale(1.03);
 }
 
-
-.profile {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 12px;
-  border-radius: 10px;
-  background: rgba(8, 72, 146, 0.493);
+/* Iconos de menú más vivos */
+.sidebar .nav-link i {
+  font-size: 1.25rem;
+  filter: drop-shadow(0 1px 2px rgba(60,99,130,0.10));
+  transition: color 0.2s;
 }
-
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #4a6fa5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: bold;
-  color: white;
+.sidebar .nav-link:hover i {
+  color: #ffeaa7;
+}
   margin-right: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
