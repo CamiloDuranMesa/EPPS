@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="assets/css/sidebar.css">
+<link rel="stylesheet" href="assets/css/sidebar.css?v=<?= filemtime(__DIR__ . '/../assets/css/sidebar.css') ?>">
 
 <div class="sidebar">
     <h4 class="mb-4">🛡️Panel EPP </h4>
