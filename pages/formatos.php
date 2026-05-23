@@ -10,7 +10,13 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-$usuario_id = $_SESSION['usuario_id'];
+$usuario_id = (int)($_SESSION['usuario_id'] ?? 0);
+if ($usuario_id <= 0) {
+    header("Location: ../views/login.php");
+    exit();
+}
+
+$responsable_entrega = $usuario_id;
 $errorMessage = '';
 $successMessage = '';
 ?>
@@ -245,16 +251,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'numero_dotacion',
                         'responsable_entrega',
                         'sst_id',
-                        'firma_empleado'
+                        'firma_empleado',
+                        'usuario_id'
                     ];
-                    $valores = ['?', '?', '?', '?', '?', '?'];
-                    $tipos = 'issiis';
-
-                    if ($soporta_usuario_id) {
-                        $campos[] = 'usuario_id';
-                        $valores[] = '?';
-                        $tipos .= 'i';
-                    }
+                    $valores = ['?', '?', '?', '?', '?', '?', '?'];
+                    $tipos = 'issiisi';
 
                     if ($soporta_firma_responsable) {
                         $campos[] = 'firma_responsable';
@@ -283,14 +284,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         &$empleado_id,
                         &$fecha_entrega,
                         &$numero_dotacion,
-                        &$usuario_id,
+                        &$responsable_entrega,
                         &$sst_id,
-                        &$archivo_firma_empleado
+                        &$archivo_firma_empleado,
+                        &$usuario_id
                     ];
-
-                    if ($soporta_usuario_id) {
-                        $parametros[] = &$usuario_id;
-                    }
 
                     if ($soporta_firma_responsable) {
                         $parametros[] = &$archivo_firma_responsable;
