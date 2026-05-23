@@ -218,6 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $firma_responsable = $_POST['firma_responsable'] ?? '';
         $soporta_firma_responsable = columnaExiste($conn, 'entregas', 'firma_responsable');
         $soporta_firma_sst = columnaExiste($conn, 'entregas', 'firma_sst');
+        $soporta_usuario_id = columnaExiste($conn, 'entregas', 'usuario_id');
 
         if (empty($firma_empleado)) {
             $errorMessage = "La firma del empleado es obligatoria.";
@@ -248,6 +249,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ];
                     $valores = ['?', '?', '?', '?', '?', '?'];
                     $tipos = 'issiis';
+
+                    if ($soporta_usuario_id) {
+                        $campos[] = 'usuario_id';
+                        $valores[] = '?';
+                        $tipos .= 'i';
+                    }
 
                     if ($soporta_firma_responsable) {
                         $campos[] = 'firma_responsable';
@@ -280,6 +287,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         &$sst_id,
                         &$archivo_firma_empleado
                     ];
+
+                    if ($soporta_usuario_id) {
+                        $parametros[] = &$usuario_id;
+                    }
 
                     if ($soporta_firma_responsable) {
                         $parametros[] = &$archivo_firma_responsable;
