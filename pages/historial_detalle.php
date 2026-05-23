@@ -18,6 +18,28 @@ if ($entrega_id <= 0) {
 $success = isset($_GET['success']) ? true : false;
 $errorMessage = null;
 
+function columnaExisteDetalle($conn, $tabla, $columna) {
+    try {
+        $stmt = $conn->prepare("SHOW COLUMNS FROM `{$tabla}` LIKE ?");
+        if (!$stmt) {
+            return false;
+        }
+        $stmt->bind_param('s', $columna);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $existe = $resultado && $resultado->num_rows > 0;
+        $stmt->close();
+        return $existe;
+    } catch (Throwable $e) {
+        error_log('Error validando columna ' . $tabla . '.' . $columna . ': ' . $e->getMessage());
+        return false;
+    }
+}
+
+$soporta_firma_empleado = columnaExisteDetalle($conn, 'entregas', 'firma_empleado');
+$soporta_firma_responsable = columnaExisteDetalle($conn, 'entregas', 'firma_responsable');
+$soporta_firma_sst = columnaExisteDetalle($conn, 'entregas', 'firma_sst');
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipo'])) {
     $map = [
         'empleado' => 'firma_empleado',
@@ -27,8 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipo'])) {
 
     $tipo = $_POST['tipo'];
     $columna = $map[$tipo] ?? null;
-    if (!$columna) {
-        $errorMessage = "Tipo de firma inválido.";
+    $columnaSoportada = match ($tipo) {
+        'empleado' => $soporta_firma_empleado,
+        'responsable' => $soporta_firma_responsable,
+        'sst' => $soporta_firma_sst,
+        default => false,
+    };
+
+    if (!$columna || !$columnaSoportada) {
+        $errorMessage = "La firma seleccionada no está disponible en este esquema.";
     } else {
         if ($tipo === 'sst') {
             $targetDir = __DIR__ . "/../firmas/firma_sst/";
@@ -162,13 +191,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipo'])) {
     }
 }
 
+$camposCabecera = [
+    'e.id',
+    'e.fecha_entrega',
+    'e.numero_dotacion',
+    'emp.id AS empleado_id',
+    'emp.nombre AS empleado_nombre',
+    'emp.cedula',
+    'emp.cargo',
+    'emp.area',
+    'u_resp.nombre AS responsable_nombre',
+    'u_sst.nombre AS sst_nombre',
+    'e.pdf_file'
+];
+
+if ($soporta_firma_empleado) {
+    $camposCabecera[] = 'e.firma_empleado';
+}
+if ($soporta_firma_responsable) {
+    $camposCabecera[] = 'e.firma_responsable';
+}
+if ($soporta_firma_sst) {
+    $camposCabecera[] = 'e.firma_sst';
+}
+
 $queryCab = "
-    SELECT e.id, e.fecha_entrega, e.numero_dotacion,
-           emp.id AS empleado_id, emp.nombre AS empleado_nombre, emp.cedula, emp.cargo, emp.area,
-           u_resp.nombre AS responsable_nombre,
-           u_sst.nombre  AS sst_nombre,
-           e.firma_empleado, e.firma_responsable, e.firma_sst,
-           e.pdf_file
+    SELECT " . implode(', ', $camposCabecera) . "
     FROM entregas e
     INNER JOIN empleados emp ON emp.id = e.empleado_id
     LEFT JOIN usuarios u_resp ON u_resp.id = e.responsable_entrega
@@ -469,11 +517,16 @@ include __DIR__ . '/../includes/header.php';
 
     <div class="row my-4">
         <?php
-        $firmas = [
-            ['key' => 'firma_empleado', 'label' => 'Firma Empleado', 'tipo' => 'empleado', 'formId' => 'formEmpleado'],
-            ['key' => 'firma_responsable', 'label' => 'Firma Responsable', 'tipo' => 'responsable', 'formId' => 'formResponsable'],
-            ['key' => 'firma_sst', 'label' => 'Firma SST', 'tipo' => 'sst', 'formId' => 'formSST']
-        ];
+        $firmas = [];
+        if ($soporta_firma_empleado) {
+            $firmas[] = ['key' => 'firma_empleado', 'label' => 'Firma Empleado', 'tipo' => 'empleado', 'formId' => 'formEmpleado'];
+        }
+        if ($soporta_firma_responsable) {
+            $firmas[] = ['key' => 'firma_responsable', 'label' => 'Firma Responsable', 'tipo' => 'responsable', 'formId' => 'formResponsable'];
+        }
+        if ($soporta_firma_sst) {
+            $firmas[] = ['key' => 'firma_sst', 'label' => 'Firma SST', 'tipo' => 'sst', 'formId' => 'formSST'];
+        }
 
         $renderFirmaSrc = function ($valor) {
             if (empty($valor)) {
