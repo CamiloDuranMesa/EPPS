@@ -189,7 +189,7 @@ if (!$cab) {
 }
 
 $queryDet = "
-    SELECT elemento, observaciones
+    SELECT elemento, observacion
     FROM entregas_detalle
     WHERE entrega_id = ?
     ORDER BY id ASC
@@ -203,8 +203,8 @@ $detRows = [];
 $observacion = null;
 while ($r = $resDet->fetch_assoc()) {
     $detRows[] = $r;
-    if ($observacion === null && !empty($r['observaciones'])) {
-        $observacion = $r['observaciones'];
+    if ($observacion === null && !empty($r['observacion'])) {
+        $observacion = $r['observacion'];
     }
 }
 $stmtDet->close();
@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     // Insertar nuevos elementos y/o observaciones
     if (!empty($_POST['elementos'])) {
         // Si hay elementos seleccionados, parsear formato "elemento|cantidad"
-        $stmt = $conn->prepare("INSERT INTO entregas_detalle (entrega_id, elemento, observaciones) VALUES (?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO entregas_detalle (entrega_id, elemento, observacion) VALUES (?, ?, ?)");
         $obs = !empty($_POST['observaciones']) ? $_POST['observaciones'] : $observacion;
         foreach ($_POST['elementos'] as $elem_data) {
             if (!empty(trim($elem_data))) {
@@ -234,8 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         $stmt->close();
     } elseif (!empty($_POST['observaciones'])) {
         // Si no hay elementos pero hay observación
-        $stmt = $conn->prepare("INSERT INTO entregas_detalle (entrega_id, elemento, observaciones) VALUES (?, NULL, ?)");
-        $stmt->bind_param("is", $entrega_id, $_POST['observaciones']);
+        $stmt = $conn->prepare("INSERT INTO entregas_detalle (entrega_id, elemento, observacion) VALUES (?, ?, ?)");
+        $stmt->bind_param("iss", $entrega_id, 'Observaciones', $_POST['observaciones']);
         $stmt->execute();
         $stmt->close();
     }
@@ -320,9 +320,14 @@ include __DIR__ . '/../includes/header.php';
         <?php if (empty($detRows)): ?>
             <tr><td class="text-center" colspan="2">Sin detalles</td></tr>
         <?php else: ?>
+            <?php $mostrarFilas = false; ?>
             <?php foreach ($detRows as $d): ?>
                 <?php
-                    $elem_text = $d['elemento'] ?? '';
+                    $elem_text = trim((string)($d['elemento'] ?? ''));
+                    if ($elem_text === 'Observaciones') {
+                        continue;
+                    }
+                    $mostrarFilas = true;
                     $cantidad = '';
                     $nombre_elem = $elem_text;
                     if (preg_match('/\b[Cc]antidad\s*:?[\s]*([0-9]+)\s*$/', $elem_text, $m)) {
@@ -335,6 +340,9 @@ include __DIR__ . '/../includes/header.php';
                     <td class="text-center"><?= $cantidad !== '' ? (int)$cantidad : '-' ?></td>
                 </tr>
             <?php endforeach; ?>
+            <?php if (!$mostrarFilas): ?>
+                <tr><td class="text-center" colspan="2">Sin detalles</td></tr>
+            <?php endif; ?>
         <?php endif; ?>
 
         </tbody>

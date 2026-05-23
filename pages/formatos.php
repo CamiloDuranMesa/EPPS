@@ -322,7 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Insertar detalles de entrega
                     $stmt_detalle = $conn->prepare(
-                        "INSERT INTO entregas_detalle (entrega_id, elemento, observaciones) VALUES (?, ?, ?)"
+                        "INSERT INTO entregas_detalle (entrega_id, elemento, observacion) VALUES (?, ?, ?)"
                     );
 
                     if (!$stmt_detalle) {
@@ -371,7 +371,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Insertar observaciones como fila separada si no hay elementos ni "otros"
                     if (empty($elementos) && empty($otros_texto) && !empty($observaciones)) {
-                        $elemento_vacio = null;
+                        $elemento_vacio = 'Observaciones';
                         if (!$stmt_detalle->bind_param("iss", $entrega_id, $elemento_vacio, $observaciones)) {
                             throw new Exception("Error al asociar parámetros (observaciones): " . $stmt_detalle->error);
                         }

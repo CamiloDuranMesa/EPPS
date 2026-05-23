@@ -102,14 +102,14 @@ foreach ($entregas as $entrega) {
         $firmaEmpleadoSrc = 'data:image/png;base64,' . $firmaData;
     }
     $eid = $entrega['id'];
-    $q = $conn->prepare("SELECT elemento, observaciones FROM entregas_detalle WHERE entrega_id = ?");
+    $q = $conn->prepare("SELECT elemento, observacion FROM entregas_detalle WHERE entrega_id = ?");
     $q->bind_param("i", $eid);
     $q->execute();
     $r = $q->get_result();
     while ($row = $r->fetch_assoc()) {
         $html .= '<tr>
             <td>' . htmlspecialchars($row['elemento']) . '</td>
-            <td>' . htmlspecialchars($row['observaciones']) . '</td>
+            <td>' . htmlspecialchars($row['observacion']) . '</td>
             <td>' . htmlspecialchars($entrega['fecha_entrega']) . '</td>
             <td>' . htmlspecialchars($entrega['responsable_nombre'] ?? '—') . '</td>
             <td>' . htmlspecialchars($entrega['sst_nombre'] ?? '—') . '</td>
