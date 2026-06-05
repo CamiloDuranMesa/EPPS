@@ -246,8 +246,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
 
                 <!-- TABLA DE EMPLEADOS -->
                 <h4 class="mt-5 mb-3">Empleados Registrados</h4>
+
+                <!-- Search / Filter -->
+                <form method="GET" class="row g-2 mb-3 align-items-center">
+                    <div class="col-auto">
+                        <input type="hidden" name="page" value="1">
+                        <input type="text" name="q" id="searchInput" class="form-control" placeholder="Buscar por nombre, cédula, cargo o área" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                        <a href="ingreso.php" class="btn btn-light">Limpiar</a>
+                    </div>
+                </form>
+
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover" id="empleadosTable">
                         <thead class="table-light">
                             <tr>
                                 <th>Nombre</th>
@@ -259,36 +272,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
                         </thead>
                         <tbody>
                             <?php
-                            $result = $conn->query("SELECT id, nombre, cedula, cargo, area FROM empleados ORDER BY nombre");
-                            
+                            // Pagination and search (server-side)
+                            $perPage = 15;
+                            $page = max(1, intval($_GET['page'] ?? 1));
+                            $offset = ($page - 1) * $perPage;
+                            $q = trim($_GET['q'] ?? '');
+
+                            if ($q !== '') {
+                                $like = "%" . $q . "%";
+                                $stmtCount = $conn->prepare("SELECT COUNT(*) FROM empleados WHERE nombre LIKE ? OR cedula LIKE ? OR cargo LIKE ? OR area LIKE ?");
+                                $stmtCount->bind_param('ssss', $like, $like, $like, $like);
+                                $stmtCount->execute();
+                                $stmtCount->bind_result($totalEmpleados);
+                                $stmtCount->fetch();
+                                $stmtCount->close();
+
+                                $stmtList = $conn->prepare("SELECT id, nombre, cedula, cargo, area FROM empleados WHERE nombre LIKE ? OR cedula LIKE ? OR cargo LIKE ? OR area LIKE ? ORDER BY nombre LIMIT ? OFFSET ?");
+                                $stmtList->bind_param('ssssii', $like, $like, $like, $like, $perPage, $offset);
+                                $stmtList->execute();
+                                $result = $stmtList->get_result();
+                            } else {
+                                $resCount = $conn->query("SELECT COUNT(*) as total FROM empleados");
+                                $totalEmpleados = ($resCount) ? (int)$resCount->fetch_assoc()['total'] : 0;
+
+                                $stmtList = $conn->prepare("SELECT id, nombre, cedula, cargo, area FROM empleados ORDER BY nombre LIMIT ? OFFSET ?");
+                                $stmtList->bind_param('ii', $perPage, $offset);
+                                $stmtList->execute();
+                                $result = $stmtList->get_result();
+                            }
+
+                            $totalPages = max(1, (int)ceil($totalEmpleados / $perPage));
+
                             if ($result && $result->num_rows > 0) {
                                 while ($empleado = $result->fetch_assoc()) {
-                                    $id = htmlspecialchars($empleado['id']);
+                                    $id = (int)$empleado['id'];
                                     $nombre = htmlspecialchars($empleado['nombre']);
                                     $cedula = htmlspecialchars($empleado['cedula']);
                                     $cargo = htmlspecialchars($empleado['cargo'] ?? '');
                                     $area = htmlspecialchars($empleado['area'] ?? '');
                                     ?>
-                                    <tr>
+                                    <tr id="empleado_row_<?= $id ?>" class="data-row">
                                         <td><?= $nombre ?></td>
                                         <td><?= $cedula ?></td>
                                         <td><?= $cargo ?></td>
                                         <td><?= $area ?></td>
                                         <td>
-                                            <button class="btn btn-sm btn-primary" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#editarEmpleadoModal"
-                                                    onclick="cargarEmpleadoParaEditar(<?= $id ?>, '<?= $nombre ?>', '<?= $cedula ?>', '<?= $cargo ?>', '<?= $area ?>')">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick='toggleInlineEdit(<?= $id ?>, <?= json_encode($empleado['nombre']) ?>, <?= json_encode($empleado['cedula']) ?>, <?= json_encode($empleado['cargo'] ?? '') ?>, <?= json_encode($empleado['area'] ?? '') ?>)'>
                                                 <i class="bi bi-pencil"></i> Editar
                                             </button>
-                                            <form method="POST" style="display:inline;" 
-                                                  onsubmit="return confirm('¿Estás seguro de eliminar este empleado?');">
-                                                <input type="hidden" name="accion" value="eliminar">
-                                                <input type="hidden" name="empleado_id" value="<?= $id ?>">
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="bi bi-trash"></i> Eliminar
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="pedirEliminarEmpleado(<?= $id ?>)">
+                                                <i class="bi bi-trash"></i> Eliminar
+                                            </button>
                                         </td>
                                     </tr>
                                     <?php
@@ -299,6 +333,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['archivo_excel'])) {
                             ?>
                         </tbody>
                     </table>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Paginación">
+                        <ul class="pagination">
+                            <?php if ($page > 1): ?>
+                                <li class="page-item"><a class="page-link" href="?page=<?= $page - 1 ?>&q=<?= urlencode($q) ?>">Anterior</a></li>
+                            <?php else: ?>
+                                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                            <?php endif; ?>
+
+                            <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                                <li class="page-item <?= $p == $page ? 'active' : '' ?>">
+                                    <a class="page-link" href="?page=<?= $p ?>&q=<?= urlencode($q) ?>"><?= $p ?></a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <?php if ($page < $totalPages): ?>
+                                <li class="page-item"><a class="page-link" href="?page=<?= $page + 1 ?>&q=<?= urlencode($q) ?>">Siguiente</a></li>
+                            <?php else: ?>
+                                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                            <?php endif; ?>
+                        </ul>
+                    </nav>
                 </div>
         </div>
     </div>
@@ -351,3 +408,97 @@ function cargarEmpleadoParaEditar(id, nombre, cedula, cargo, area) {
     document.getElementById('cargo_edit').value = cargo;
     document.getElementById('area_edit').value = area;
 }
+</script>
+
+<!-- Modal de confirmación de eliminación -->
+<div class="modal fade" id="confirmEliminarEmpleado" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Eliminar empleado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de eliminar este empleado?</p>
+                <p class="text-muted">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button id="confirmEliminarBtn" type="button" class="btn btn-danger">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let empleadoAEliminarId = null;
+
+function pedirEliminarEmpleado(id) {
+    empleadoAEliminarId = id;
+    const modalEl = document.getElementById('confirmEliminarEmpleado');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const btnEliminar = document.getElementById('confirmEliminarBtn');
+    if (btnEliminar) {
+        btnEliminar.addEventListener('click', function() {
+            if (!empleadoAEliminarId) return;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.style.display = 'none';
+            form.innerHTML = `
+                <input type="hidden" name="accion" value="eliminar">
+                <input type="hidden" name="empleado_id" value="${empleadoAEliminarId}">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+});
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function toggleInlineEdit(id, nombre, cedula, cargo, area) {
+    const existing = document.getElementById('inline_edit_' + id);
+    if (existing) {
+        existing.remove();
+        return;
+    }
+
+    const row = document.getElementById('empleado_row_' + id);
+    if (!row) return;
+
+    const tr = document.createElement('tr');
+    tr.id = 'inline_edit_' + id;
+    tr.innerHTML = `
+        <td colspan="5">
+            <form method="POST" class="row g-2 align-items-center">
+                <input type="hidden" name="accion" value="editar">
+                <input type="hidden" name="empleado_id" value="${id}">
+                <div class="col-md-3">
+                    <input type="text" name="nombre" class="form-control" value="${escapeHtml(nombre)}" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" name="documento" class="form-control" value="${escapeHtml(cedula)}" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" name="cargo" class="form-control" value="${escapeHtml(cargo)}">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" name="area" class="form-control" value="${escapeHtml(area)}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-success">Aceptar</button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('inline_edit_${id}').remove();">Cancelar</button>
+                </div>
+            </form>
+        </td>
+    `;
+
+    row.insertAdjacentElement('afterend', tr);
+}
+</script>
