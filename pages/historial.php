@@ -66,8 +66,8 @@ $totalPaginas = max(1, (int)ceil($totalEntregas / $porPagina));
 
 $query = "
     SELECT e.id, e.fecha_entrega,
-           u_resp.nombre AS responsable_nombre,
-           u_sst.nombre  AS sst_nombre,
+            u_resp.nombre AS responsable_nombre,
+            COALESCE(e.sst_nombre, u_sst.nombre)  AS sst_nombre,
            (SELECT COUNT(*) FROM entregas_detalle d WHERE d.entrega_id = e.id) AS items
     FROM entregas e
     LEFT JOIN usuarios u_resp ON u_resp.id = e.responsable_entrega

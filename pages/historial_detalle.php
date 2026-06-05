@@ -201,7 +201,7 @@ $camposCabecera = [
     'emp.cargo',
     'emp.area',
     'u_resp.nombre AS responsable_nombre',
-    'u_sst.nombre AS sst_nombre',
+    'COALESCE(e.sst_nombre, u_sst.nombre) AS sst_nombre',
     'e.pdf_file'
 ];
 

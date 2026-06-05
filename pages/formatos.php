@@ -211,6 +211,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sst_id = filter_var($_POST['sst_id'] ?? null, FILTER_VALIDATE_INT);
     $sst_id = ($sst_id === false) ? 0 : (int)$sst_id;
 
+    // Determinar nombre del representante SST: si se seleccionó un sst_id válido, buscar su nombre
+    $sst_nombre = 'SST Test';
+    if ($sst_id > 0) {
+        try {
+            $stmt_sst = $conn->prepare("SELECT nombre FROM empleados WHERE id = ?");
+            if ($stmt_sst) {
+                $stmt_sst->bind_param('i', $sst_id);
+                $stmt_sst->execute();
+                $stmt_sst->bind_result($sst_nombre_db);
+                if ($stmt_sst->fetch() && !empty($sst_nombre_db)) {
+                    $sst_nombre = $sst_nombre_db;
+                }
+                $stmt_sst->close();
+            }
+        } catch (Throwable $e) {
+            error_log('Error buscando nombre SST: ' . $e->getMessage());
+            // Mantener valor por defecto
+        }
+    }
+
     // Validaciones básicas
     if (!$empleado_id) {
         $errorMessage = "Debe seleccionar un empleado válido.";
@@ -255,11 +275,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'numero_dotacion',
                         'responsable_entrega',
                         'sst_id',
+                        'sst_nombre',
                         'firma_empleado',
                         'usuario_id'
                     ];
-                    $valores = ['?', '?', '?', '?', '?', '?', '?'];
-                    $tipos = 'issiisi';
+                    $valores = ['?', '?', '?', '?', '?', '?', '?', '?'];
+                    $tipos = 'issiissi';
 
                     if ($soporta_firma_responsable) {
                         $campos[] = 'firma_responsable';
@@ -290,6 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         &$numero_dotacion,
                         &$responsable_entrega,
                         &$sst_id,
+                        &$sst_nombre,
                         &$archivo_firma_empleado,
                         &$usuario_id
                     ];
@@ -316,7 +338,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $pdf_filename = guardarPDF($_FILES['archivo_pdf']);
                         if ($pdf_filename) {
                             $stmt_pdf = $conn->prepare("UPDATE entregas SET pdf_file = ? WHERE id = ?");
-                            if (!$stmt_pdf->execute([$pdf_filename, $entrega_id])) {
+                            if (!$stmt_pdf) {
+                                throw new Exception("Error en preparación de actualización PDF: " . $conn->error);
+                            }
+                            $stmt_pdf->bind_param('si', $pdf_filename, $entrega_id);
+                            if (!$stmt_pdf->execute()) {
                                 error_log("Error al actualizar PDF: " . $stmt_pdf->error);
                             }
                             $stmt_pdf->close();
@@ -576,7 +602,6 @@ include __DIR__ . '/../includes/header.php';
                 <select name="sst_id" id="sstSelect" class="form-select mb-3">
                     <option value="0" <?= (!isset($_POST['sst_id']) || intval($_POST['sst_id']) === 0) ? 'selected' : '' ?>>Representante genérico</option>
                 </select>
-                <label class="form-label small">Firma SST</label>
                 <canvas id="firmaSst" class="border border-2 d-block w-100 bg-light" 
                         style="height: 180px; touch-action: none; cursor: crosshair;"></canvas>
                 <input type="hidden" name="firma_sst" id="firma_sst">

@@ -95,6 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
 // ============================================================
 // MANEJO DE NUEVO EMPLEADO
 // ============================================================
+?>
 <link rel="stylesheet" href="../assets/css/ingreso.css">
 
 <?php
