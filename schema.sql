@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nombre VARCHAR(100) NOT NULL COMMENT 'Nombre completo del usuario',
     usuario VARCHAR(50) UNIQUE NOT NULL COMMENT 'Usuario único para login',
     password VARCHAR(255) NOT NULL COMMENT 'Contraseña hasheada con bcrypt',
-    rol ENUM('admin', 'usuario') DEFAULT 'usuario' COMMENT 'Rol del usuario en el sistema',
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de registro del usuario'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -66,18 +65,6 @@ CREATE TABLE IF NOT EXISTS entregas_detalle (
     elemento VARCHAR(100) NOT NULL COMMENT 'Nombre del elemento EPP entregado',
     observacion TEXT COMMENT 'Observaciones sobre el elemento entregado',
     FOREIGN KEY (entrega_id) REFERENCES entregas(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================================================
--- TABLA: elementos_personalizados
--- Descripción: Elementos personalizados creados por usuarios
--- ============================================================================
-CREATE TABLE IF NOT EXISTS elementos_personalizados (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT NOT NULL COMMENT 'ID del usuario que creó el elemento',
-    nombre_elemento VARCHAR(100) NOT NULL COMMENT 'Nombre del elemento personalizado',
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del elemento',
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -146,12 +133,11 @@ CALL sp_create_index_if_missing('empleados', 'idx_empleado_cargo', '(cargo)');
 -- Usuario: admin
 -- Contraseña: admin123
 -- IMPORTANTE: Cambiar la contraseña inmediatamente después de la instalación
-INSERT INTO usuarios (nombre, usuario, password, rol) 
-VALUES ('Administrador', 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin')
+INSERT INTO usuarios (nombre, usuario, password) 
+VALUES ('Administrador', 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
 ON DUPLICATE KEY UPDATE
     nombre = VALUES(nombre),
-    password = VALUES(password),
-    rol = VALUES(rol);
+    password = VALUES(password);
 
 -- ============================================================================
 -- VISTAS ÚTILES (OPCIONAL)
