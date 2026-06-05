@@ -222,6 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Validar firmas
         $firma_empleado = $_POST['firma_empleado'] ?? '';
         $firma_responsable = $_POST['firma_responsable'] ?? '';
+        $firma_sst = $_POST['firma_sst'] ?? '';
         $soporta_firma_responsable = columnaExiste($conn, 'entregas', 'firma_responsable');
         $soporta_firma_sst = columnaExiste($conn, 'entregas', 'firma_sst');
         $soporta_usuario_id = columnaExiste($conn, 'entregas', 'usuario_id');
@@ -233,6 +234,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $archivo_firma_empleado = guardarFirma($firma_empleado);
             $archivo_firma_responsable = $soporta_firma_responsable && !empty($firma_responsable)
                 ? guardarFirma($firma_responsable)
+                : null;
+            $archivo_firma_sst = $soporta_firma_sst && !empty($firma_sst)
+                ? guardarFirma($firma_sst)
                 : null;
 
             if (!$archivo_firma_empleado) {
@@ -295,7 +299,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     if ($soporta_firma_sst) {
-                        $archivo_firma_sst = '';
                         $parametros[] = &$archivo_firma_sst;
                     }
 
@@ -574,9 +577,13 @@ include __DIR__ . '/../includes/header.php';
                     <option value="0" <?= (!isset($_POST['sst_id']) || intval($_POST['sst_id']) === 0) ? 'selected' : '' ?>>Representante genérico</option>
                 </select>
                 <label class="form-label small">Firma SST</label>
-                <div class="text-center text-muted border rounded p-3">
-                    Sin firma configurada en esta plantilla.
-                </div>
+                <canvas id="firmaSst" class="border border-2 d-block w-100 bg-light" 
+                        style="height: 180px; touch-action: none; cursor: crosshair;"></canvas>
+                <input type="hidden" name="firma_sst" id="firma_sst">
+                <button type="button" class="btn btn-sm btn-secondary mt-2 w-100" 
+                        onclick="limpiarCanvas('firmaSst')">
+                    Limpiar firma
+                </button>
             </div>
         </div>
 
@@ -696,9 +703,15 @@ function configurarCanvasFirma(canvasId) {
  * Guarda firmas antes de enviar formulario
  */
 function guardarFirmas() {
-    ['firmaEmpleado', 'firmaResponsable'].forEach(canvasId => {
+    ['firmaEmpleado', 'firmaResponsable', 'firmaSst'].forEach(canvasId => {
         const canvas = document.getElementById(canvasId);
-        const inputId = canvasId === 'firmaEmpleado' ? 'firma_empleado' : 'firma_responsable';
+        if (!canvas) return; // Skip if canvas doesn't exist
+        
+        let inputId;
+        if (canvasId === 'firmaEmpleado') inputId = 'firma_empleado';
+        else if (canvasId === 'firmaResponsable') inputId = 'firma_responsable';
+        else if (canvasId === 'firmaSst') inputId = 'firma_sst';
+        
         const dataURL = canvas.toDataURL('image/png');
         document.getElementById(inputId).value = dataURL;
     });
@@ -741,6 +754,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configurar canvas de firmas
     configurarCanvasFirma('firmaEmpleado');
     configurarCanvasFirma('firmaResponsable');
+    configurarCanvasFirma('firmaSst');
 
     // Envío del formulario
     document.getElementById('formularioEntrega').addEventListener('submit', function(e) {
