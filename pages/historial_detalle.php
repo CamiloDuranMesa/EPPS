@@ -20,6 +20,26 @@ $errorMessage = null;
 
 function columnaExisteDetalle($conn, $tabla, $columna) {
     try {
+        $databaseName = null;
+        $resultadoDb = $conn->query('SELECT DATABASE() AS db');
+        if ($resultadoDb && $rowDb = $resultadoDb->fetch_assoc()) {
+            $databaseName = $rowDb['db'];
+        }
+
+        if ($databaseName) {
+            $stmt = $conn->prepare(
+                "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"
+            );
+            if ($stmt) {
+                $stmt->bind_param('sss', $databaseName, $tabla, $columna);
+                $stmt->execute();
+                $resultado = $stmt->get_result();
+                $existe = $resultado && $resultado->num_rows > 0;
+                $stmt->close();
+                return $existe;
+            }
+        }
+
         $stmt = $conn->prepare("SHOW COLUMNS FROM `{$tabla}` LIKE ?");
         if (!$stmt) {
             return false;

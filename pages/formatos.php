@@ -145,6 +145,26 @@ function existeTabla($conn, $tabla) {
 
 function columnaExiste($conn, $tabla, $columna) {
     try {
+        $databaseName = null;
+        $resultadoDb = $conn->query('SELECT DATABASE() AS db');
+        if ($resultadoDb && $rowDb = $resultadoDb->fetch_assoc()) {
+            $databaseName = $rowDb['db'];
+        }
+
+        if ($databaseName) {
+            $stmt = $conn->prepare(
+                "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"
+            );
+            if ($stmt) {
+                $stmt->bind_param('sss', $databaseName, $tabla, $columna);
+                $stmt->execute();
+                $resultado = $stmt->get_result();
+                $existe = $resultado && $resultado->num_rows > 0;
+                $stmt->close();
+                return $existe;
+            }
+        }
+
         $stmt = $conn->prepare("SHOW COLUMNS FROM `{$tabla}` LIKE ?");
         if (!$stmt) {
             return false;
@@ -258,19 +278,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($soporta_firma_responsable && !empty($firma_responsable)) {
                 $archivo_firma_responsable = guardarFirma($firma_responsable);
                 if ($archivo_firma_responsable === null) {
-                    error_log('No se pudo guardar firma_responsable para entrega.');
+                    $errorMessage = "Error al guardar la firma del responsable. Por favor, intente de nuevo.";
                 }
             }
 
             if ($soporta_firma_sst && !empty($firma_sst)) {
                 $archivo_firma_sst = guardarFirma($firma_sst);
                 if ($archivo_firma_sst === null) {
-                    error_log('No se pudo guardar firma_sst para entrega.');
+                    $errorMessage = "Error al guardar la firma del representante SST. Por favor, intente de nuevo.";
                 }
             }
 
             if (!$archivo_firma_empleado) {
                 $errorMessage = "Error al guardar la firma del empleado. Por favor, intente de nuevo.";
+            } elseif (($soporta_firma_responsable && !empty($firma_responsable) && !$archivo_firma_responsable) || ($soporta_firma_sst && !empty($firma_sst) && !$archivo_firma_sst)) {
+                // No continuar si alguna firma adicional falló al guardarse.
             } else {
                 // Guardar entrega en base de datos
                 $conn->begin_transaction();
