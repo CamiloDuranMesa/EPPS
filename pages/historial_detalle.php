@@ -533,7 +533,9 @@ include __DIR__ . '/../includes/header.php';
                 }
             }
 
-            return '../firmas/' . htmlspecialchars($valor);
+            $partes = explode('/', $valor);
+            $partes = array_map('rawurlencode', $partes);
+            return '../firmas/' . implode('/', $partes);
         };
 
         foreach ($firmas as $f): ?>

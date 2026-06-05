@@ -252,12 +252,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Guardar firmas
             $archivo_firma_empleado = guardarFirma($firma_empleado);
-            $archivo_firma_responsable = $soporta_firma_responsable && !empty($firma_responsable)
-                ? guardarFirma($firma_responsable)
-                : null;
-            $archivo_firma_sst = $soporta_firma_sst && !empty($firma_sst)
-                ? guardarFirma($firma_sst)
-                : null;
+            $archivo_firma_responsable = null;
+            $archivo_firma_sst = null;
+
+            if ($soporta_firma_responsable && !empty($firma_responsable)) {
+                $archivo_firma_responsable = guardarFirma($firma_responsable);
+                if ($archivo_firma_responsable === null) {
+                    error_log('No se pudo guardar firma_responsable para entrega.');
+                }
+            }
+
+            if ($soporta_firma_sst && !empty($firma_sst)) {
+                $archivo_firma_sst = guardarFirma($firma_sst);
+                if ($archivo_firma_sst === null) {
+                    error_log('No se pudo guardar firma_sst para entrega.');
+                }
+            }
 
             if (!$archivo_firma_empleado) {
                 $errorMessage = "Error al guardar la firma del empleado. Por favor, intente de nuevo.";
@@ -487,7 +497,7 @@ include __DIR__ . '/../includes/header.php';
 
     <h2 class="titulo-formulario">Registro de Entregas</h2>
 
-    <form method="POST" enctype="multipart/form-data" id="formularioEntrega">
+    <form method="POST" enctype="multipart/form-data" id="formularioEntrega" onsubmit="guardarFirmas(); return validarFormulario();">
         <!-- Empleado y Fecha -->
         <div class="row g-3 mb-4">
             <div class="col-12 col-md-6">
