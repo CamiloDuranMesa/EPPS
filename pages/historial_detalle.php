@@ -59,20 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipo'])) {
     if (!$columna || !$columnaSoportada) {
         $errorMessage = "La firma seleccionada no está disponible en este esquema.";
     } else {
-        if ($tipo === 'sst') {
-            $targetDir = __DIR__ . "/../firmas/firma_sst/";
-            if (!is_dir($targetDir)) {
-                if (!mkdir($targetDir, 0755, true)) {
-                    $errorMessage = "No se pudo crear el directorio de firma_sst.";
-                }
-            }
-        } else {
-            $targetDir = __DIR__ . "/../firmas/";
-            if (!is_dir($targetDir)) {
-                if (!mkdir($targetDir, 0755, true)) {
-                    $errorMessage = "No se pudo crear el directorio de firmas.";
-                }
-            }
+$targetDir = __DIR__ . "/../firmas/";
+    if (!is_dir($targetDir) && !mkdir($targetDir, 0755, true)) {
+        $errorMessage = "No se pudo crear el directorio de firmas.";
         }
 
         $firmaDibujada = $_POST['firma_dibujada'] ?? '';
@@ -98,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipo'])) {
                     $stmtOld->close();
 
                     $query = "UPDATE entregas SET $columna = ? WHERE id = ?";
-                    $dbFile = ($tipo === 'sst') ? "firma_sst/" . $fileName : $fileName;
+                    $dbFile = $fileName;
                     $stmt = $conn->prepare($query);
                     $stmt->bind_param("si", $dbFile, $entrega_id);
 
@@ -156,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipo'])) {
                             }
                             $stmtOld->close();
                             $query = "UPDATE entregas SET $columna = ? WHERE id = ?";
-                            $dbFile = ($tipo === 'sst') ? "firma_sst/" . $fileName : $fileName;
+                            $dbFile = $fileName;
                             $stmt = $conn->prepare($query);
                             $stmt->bind_param("si", $dbFile, $entrega_id);
 
@@ -529,13 +518,19 @@ include __DIR__ . '/../includes/header.php';
         }
 
         $renderFirmaSrc = function ($valor) {
-            if (empty($valor)) {
+            $valor = trim((string)$valor);
+            if ($valor === '') {
                 return null;
             }
 
-            $ruta = __DIR__ . '/../firmas/' . ltrim($valor, '/');
+            $valor = ltrim(str_replace('\\', '/', $valor), '/');
+            $ruta = __DIR__ . '/../firmas/' . $valor;
             if (!file_exists($ruta)) {
-                return null;
+                $valor = basename($valor);
+                $ruta = __DIR__ . '/../firmas/' . $valor;
+                if (!file_exists($ruta)) {
+                    return null;
+                }
             }
 
             return '../firmas/' . htmlspecialchars($valor);
@@ -553,7 +548,6 @@ include __DIR__ . '/../includes/header.php';
                     <div class="text-muted">Sin firma</div>
                 <?php endif; ?>
 
-                <?php if ($f['tipo'] !== 'sst'): ?>
                     <button class="btn btn-sm btn-warning mt-2" type="button" onclick="toggleForm('<?= $f['formId'] ?>')">Editar</button>
                     <form action="" method="POST" enctype="multipart/form-data" id="<?= $f['formId'] ?>"
                         class="mt-2 d-none"
@@ -575,7 +569,6 @@ include __DIR__ . '/../includes/header.php';
                         </div>
                         <button type="submit" name="update_firma" class="btn btn-sm btn-primary">Guardar</button>
                     </form>
-                <?php endif; ?>
             </div>
         <?php endforeach; ?>
     </div>
@@ -748,7 +741,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    ['formEmpleado','formResponsable'].forEach(function(fid){
+    ['formEmpleado','formResponsable','formSST'].forEach(function(fid){
         var canvas = document.getElementById('canvas_' + fid);
         if (!canvas) return;
         var ctx = canvas.getContext('2d');
